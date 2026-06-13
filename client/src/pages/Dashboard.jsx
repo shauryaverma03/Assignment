@@ -44,7 +44,7 @@ export default function Dashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const avatarColors = ['bg-emerald-500','bg-violet-500','bg-pink-500','bg-sky-500','bg-orange-500','bg-cyan-500'];
+  const avatarColors = ['bg-accent/100','bg-violet-500','bg-pink-500','bg-sky-500','bg-orange-500','bg-cyan-500'];
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -61,7 +61,7 @@ export default function Dashboard() {
             <div className="space-y-1">
               {groups.map((g, i) => (
                 <Link key={g.id} to={`/groups/${g.id}`}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-emerald-50 text-slate-700 hover:text-emerald-600 transition group">
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-accent/10 text-slate-700 hover:text-accent transition group">
                   <span className={`w-8 h-8 rounded-lg ${avatarColors[i % avatarColors.length]} text-white flex items-center justify-center text-sm font-bold flex-shrink-0`}>
                     {g.name[0].toUpperCase()}
                   </span>
@@ -73,7 +73,7 @@ export default function Dashboard() {
               ))}
             </div>
             <button onClick={() => setShowCreate(true)}
-              className="mt-3 w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-slate-300 hover:border-emerald-400 text-slate-400 hover:text-emerald-500 text-sm transition">
+              className="mt-3 w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-slate-300 hover:border-accent text-slate-400 hover:text-accent text-sm transition">
               <Plus size={14} /> New Group
             </button>
           </div>
@@ -81,7 +81,7 @@ export default function Dashboard() {
           <div className="p-4 border-t border-slate-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white text-sm font-bold">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-accent flex items-center justify-center text-white text-sm font-bold">
                   {user?.username?.[0]?.toUpperCase()}
                 </div>
                 <span className="text-sm font-medium text-slate-700">{user?.username}</span>
@@ -106,8 +106,8 @@ export default function Dashboard() {
             <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-slate-500 text-sm">Total Groups</span>
-                <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
-                  <Users size={18} className="text-emerald-600" />
+                <div className="w-9 h-9 bg-accent/15 rounded-xl flex items-center justify-center">
+                  <Users size={18} className="text-accent" />
                 </div>
               </div>
               <p className="text-3xl font-bold text-slate-800">{stats.totalGroups}</p>
@@ -123,15 +123,15 @@ export default function Dashboard() {
               <p className="text-3xl font-bold text-slate-800">{stats.totalExpenses}</p>
               <p className="text-xs text-slate-400 mt-1">Across all groups</p>
             </div>
-            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-5 text-white shadow-lg shadow-emerald-200">
+            <div className="bg-gradient-to-br from-accent to-accent rounded-2xl p-5 text-white shadow-lg shadow-accent">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-emerald-200 text-sm">Quick Action</span>
+                <span className="text-accent text-sm">Quick Action</span>
                 <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
                   <TrendingUp size={18} className="text-white" />
                 </div>
               </div>
               <p className="text-lg font-bold">Add an expense</p>
-              <p className="text-emerald-200 text-xs mt-1">Open any group to add</p>
+              <p className="text-accent text-xs mt-1">Open any group to add</p>
             </div>
           </div>
 
@@ -139,7 +139,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-slate-800 text-lg">Your Groups</h2>
             <button onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
+              className="flex items-center gap-2 bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
               <Plus size={15} /> New Group
             </button>
           </div>
@@ -150,7 +150,7 @@ export default function Dashboard() {
               <h3 className="font-bold text-slate-700 text-lg mb-2">No groups yet</h3>
               <p className="text-slate-400 text-sm mb-6">Create a group to start tracking shared expenses</p>
               <button onClick={() => setShowCreate(true)}
-                className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl hover:bg-emerald-700 transition text-sm font-medium">
+                className="bg-accent text-white px-6 py-2.5 rounded-xl hover:bg-accent-hover transition text-sm font-medium">
                 Create your first group
               </button>
             </div>
@@ -158,7 +158,7 @@ export default function Dashboard() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {groups.map((g, i) => (
                 <Link key={g.id} to={`/groups/${g.id}`}
-                  className="bg-white rounded-2xl border border-slate-200 p-5 hover:border-emerald-300 hover:shadow-md transition group">
+                  className="bg-white rounded-2xl border border-slate-200 p-5 hover:border-accent hover:shadow-md transition group">
                   <div className="flex items-start justify-between mb-4">
                     <div className={`w-11 h-11 rounded-xl ${avatarColors[i % avatarColors.length]} text-white flex items-center justify-center text-xl font-bold`}>
                       {g.name[0].toUpperCase()}
@@ -167,7 +167,7 @@ export default function Dashboard() {
                       {g._count?.expenses || 0} expenses
                     </span>
                   </div>
-                  <h3 className="font-bold text-slate-800 group-hover:text-emerald-600 transition mb-1">{g.name}</h3>
+                  <h3 className="font-bold text-slate-800 group-hover:text-accent transition mb-1">{g.name}</h3>
                   <p className="text-slate-400 text-sm mb-4 truncate">{g.description || 'No description'}</p>
                   <div className="flex items-center justify-between">
                     <div className="flex -space-x-2">
@@ -182,7 +182,7 @@ export default function Dashboard() {
                         </div>
                       )}
                     </div>
-                    <ArrowRight size={16} className="text-slate-300 group-hover:text-emerald-400 transition" />
+                    <ArrowRight size={16} className="text-slate-300 group-hover:text-accent transition" />
                   </div>
                 </Link>
               ))}
@@ -201,14 +201,14 @@ export default function Dashboard() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Group name *</label>
                 <input required
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
                   placeholder="e.g. Flat 4B, Goa Trip 2024..."
                   value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
                 <input
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
                   placeholder="Optional description"
                   value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
               </div>
@@ -216,7 +216,7 @@ export default function Dashboard() {
                 <button type="button" onClick={() => setShowCreate(false)}
                   className="flex-1 border border-slate-200 py-2.5 rounded-xl text-sm hover:bg-slate-50 font-medium text-slate-600">Cancel</button>
                 <button type="submit" disabled={loading}
-                  className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 hover:from-emerald-500 hover:to-purple-500 transition">
+                  className="flex-1 bg-gradient-to-r from-accent to-accent text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 hover:from-accent hover:to-purple-500 transition">
                   {loading ? 'Creating...' : 'Create Group'}
                 </button>
               </div>

@@ -25,6 +25,8 @@ export default function Register() {
     } finally { setLoading(false); }
   };
 
+  const inputCls = "w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent";
+
   return (
     <div className="min-h-screen flex">
       {/* LEFT — form */}
@@ -40,45 +42,42 @@ export default function Register() {
               <label className="block text-sm font-medium text-zinc-700 mb-1.5">Email</label>
               <input type="email" required value={form.email}
                 onChange={e => setForm({ ...form, email: e.target.value })}
-                className="w-full border border-zinc-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-sm"
-                placeholder="you@example.com" />
+                className={inputCls} placeholder="you@example.com" />
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 mb-1.5">Username</label>
               <input type="text" required value={form.username}
                 onChange={e => setForm({ ...form, username: e.target.value })}
-                className="w-full border border-zinc-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-sm"
-                placeholder="shaurya" />
+                className={inputCls} placeholder="shaurya" />
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-700 mb-1.5">Password</label>
               <input type="password" required value={form.password}
                 onChange={e => setForm({ ...form, password: e.target.value })}
-                className="w-full border border-zinc-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-sm"
-                placeholder="Min 8 characters" />
+                className={inputCls} placeholder="Min 8 characters" />
             </div>
             <button type="submit" disabled={loading}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3.5 rounded-xl font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2">
+              className="w-full bg-accent hover:bg-accent-hover text-accent-fg py-3.5 rounded-xl font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2">
               {loading ? 'Creating account...' : <>Create account <ArrowRight size={17} /></>}
             </button>
           </form>
 
           <p className="text-center text-zinc-500 text-sm mt-8">
-            Already have an account? <Link to="/login" className="text-emerald-600 font-semibold hover:underline">Sign in</Link>
+            Already have an account? <Link to="/login" className="text-accent font-semibold hover:underline">Sign in</Link>
           </p>
         </div>
       </div>
 
       {/* RIGHT — dark */}
       <div className="hidden lg:flex w-1/2 relative bg-[#0a0a0a] grid-texture overflow-hidden items-center justify-center p-12">
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/15 blur-[120px] rounded-full"></div>
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/15 blur-[120px] rounded-full"></div>
         <div className="relative max-w-md">
           <h2 className="text-4xl font-bold text-white leading-tight mb-6">Start splitting<br /><span className="text-zinc-500">in 30 seconds.</span></h2>
           <p className="text-zinc-400 mb-8">Create a group, add expenses, and see exactly who owes what — instantly.</p>
           <ul className="space-y-4">
             {['Equal, exact, % and share-based splits', 'USD → INR auto conversion', 'CSV import with anomaly detection', 'Min-cash-flow debt settlement'].map(f => (
               <li key={f} className="flex items-center gap-3 text-zinc-300">
-                <span className="w-6 h-6 rounded-full bg-emerald-400/10 border border-emerald-400/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                <span className="w-6 h-6 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center flex-shrink-0">
                   <Check size={13} />
                 </span>
                 <span className="text-sm">{f}</span>

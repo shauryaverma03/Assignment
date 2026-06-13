@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import ThemeSwitcher from './components/ThemeSwitcher';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -12,7 +14,7 @@ const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
   return user ? children : <Navigate to="/login" />;
@@ -30,14 +32,17 @@ function AppRoutes() {
         <Route path="/groups/:id" element={<ProtectedRoute><GroupDetail /></ProtectedRoute>} />
       </Routes>
       <Toaster position="top-right" toastOptions={{ style: { borderRadius: '12px', fontFamily: 'inherit', fontSize: '14px' } }} />
+      <ThemeSwitcher />
     </BrowserRouter>
   );
 }
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

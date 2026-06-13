@@ -26,6 +26,8 @@ export default function Login() {
     } finally { setLoading(false); }
   };
 
+  const inputCls = "w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent";
+
   return (
     <div className="min-h-screen flex">
       {/* LEFT — form */}
@@ -41,8 +43,7 @@ export default function Login() {
               <label className="block text-sm font-medium text-zinc-700 mb-1.5">Email</label>
               <input type="email" required value={form.email}
                 onChange={e => setForm({ ...form, email: e.target.value })}
-                className="w-full border border-zinc-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-sm"
-                placeholder="you@example.com" />
+                className={inputCls} placeholder="you@example.com" />
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -53,24 +54,23 @@ export default function Login() {
               </div>
               <input type={show ? 'text' : 'password'} required value={form.password}
                 onChange={e => setForm({ ...form, password: e.target.value })}
-                className="w-full border border-zinc-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 text-sm"
-                placeholder="Enter your password" />
+                className={inputCls} placeholder="Enter your password" />
             </div>
             <button type="submit" disabled={loading}
-              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3.5 rounded-xl font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2">
+              className="w-full bg-accent hover:bg-accent-hover text-accent-fg py-3.5 rounded-xl font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2">
               {loading ? 'Signing in...' : <>Sign in <ArrowRight size={17} /></>}
             </button>
           </form>
 
           <p className="text-center text-zinc-500 text-sm mt-8">
-            New here? <Link to="/register" className="text-emerald-600 font-semibold hover:underline">Create an account</Link>
+            New here? <Link to="/register" className="text-accent font-semibold hover:underline">Create an account</Link>
           </p>
         </div>
       </div>
 
       {/* RIGHT — dark dashboard mockup */}
       <div className="hidden lg:flex w-1/2 relative bg-[#0a0a0a] grid-texture overflow-hidden items-center justify-center p-12">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/15 blur-[120px] rounded-full"></div>
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-accent/15 blur-[120px] rounded-full"></div>
         <div className="relative w-full max-w-md">
           <div className="grid grid-cols-2 gap-4 mb-4">
             <StatCard label="GROUPS" value="3" sub="↑ 1 this month" />
@@ -85,17 +85,17 @@ export default function Login() {
                     <div className="w-7 h-7 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center text-xs font-bold">{n[0]}</div>
                     <span className="text-sm text-zinc-300">{n}</span>
                   </div>
-                  <span className={`text-sm font-semibold ${p ? 'text-emerald-400' : 'text-red-400'}`}>{a}</span>
+                  <span className={`text-sm font-semibold ${p ? 'text-accent' : 'text-red-400'}`}>{a}</span>
                 </div>
               ))}
             </div>
           </div>
-          <div className="bg-emerald-400/5 border border-emerald-400/20 rounded-2xl px-5 py-4">
-            <p className="text-xs tracking-wider text-emerald-400/70 mb-1">SETTLE UP</p>
-            <p className="text-white font-semibold">Rohan pays Aisha <span className="text-emerald-400">₹1,180</span></p>
+          <div className="bg-accent/5 border border-accent/20 rounded-2xl px-5 py-4">
+            <p className="text-xs tracking-wider text-accent/70 mb-1">SETTLE UP</p>
+            <p className="text-white font-semibold">Rohan pays Aisha <span className="text-accent">₹1,180</span></p>
           </div>
           <div className="mt-10">
-            <p className="text-xs font-semibold tracking-[0.2em] text-emerald-400/70 mb-2">WELCOME TO SPLITWISE</p>
+            <p className="text-xs font-semibold tracking-[0.2em] text-accent/70 mb-2">WELCOME TO SPLITWISE</p>
             <h2 className="text-3xl font-bold text-white leading-tight">Your balances,<br /><span className="text-zinc-500">always in view.</span></h2>
           </div>
         </div>
@@ -109,7 +109,7 @@ function StatCard({ label, value, sub }) {
     <div className="bg-[#111] border border-zinc-800 rounded-2xl p-4">
       <p className="text-[10px] tracking-wider text-zinc-500 mb-2">{label}</p>
       <p className="text-3xl font-bold text-white">{value}</p>
-      <p className="text-xs text-emerald-400 mt-1">{sub}</p>
+      <p className="text-xs text-accent mt-1">{sub}</p>
     </div>
   );
 }

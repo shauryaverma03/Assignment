@@ -22,14 +22,14 @@ export default function Landing() {
           style={{ animation: 'curtainUp .8s cubic-bezier(0.76,0,0.24,1) 1.6s forwards' }}
         >
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-emerald-400 flex items-center justify-center" style={{ animation: 'introMark 1.4s cubic-bezier(0.16,1,0.3,1) both' }}>
-              <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="#0a0a0a" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+            <div className="w-12 h-12 rounded-xl bg-accent flex items-center justify-center" style={{ animation: 'introMark 1.4s cubic-bezier(0.16,1,0.3,1) both' }}>
+              <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="rgb(var(--accent-fg))" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M7 7h10M7 7l3-3M7 7l3 3" />
                 <path d="M17 17H7M17 17l-3 3M17 17l-3-3" />
               </svg>
             </div>
             <span className="text-3xl font-bold tracking-tight text-white" style={{ animation: 'introWord 1s cubic-bezier(0.16,1,0.3,1) .5s both' }}>
-              Split<span className="text-emerald-400">wise</span>
+              Split<span className="text-accent">wise</span>
             </span>
           </div>
         </div>
@@ -46,7 +46,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-2">
             <Link to="/login" className="text-sm text-zinc-300 hover:text-white px-4 py-2 transition">Sign in</Link>
-            <Link to="/register" className="text-sm font-semibold text-[#0a0a0a] bg-emerald-400 hover:bg-emerald-300 px-4 py-2 rounded-lg transition">
+            <Link to="/register" className="text-sm font-semibold text-accent-fg bg-accent hover:bg-accent-hover px-4 py-2 rounded-lg transition">
               Get Started
             </Link>
           </div>
@@ -56,12 +56,12 @@ export default function Landing() {
       {/* ---------- HERO ---------- */}
       <section className="relative">
         {/* glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-emerald-500/10 blur-[120px] rounded-full glow-pulse pointer-events-none"></div>
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-accent/10 blur-[120px] rounded-full glow-pulse pointer-events-none"></div>
         <div className="absolute inset-0 grid-texture opacity-60 pointer-events-none [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)]"></div>
 
         <div className="relative max-w-5xl mx-auto px-6 pt-24 pb-20 text-center">
           <div className="inline-flex items-center gap-2 border border-zinc-800 bg-zinc-900/50 text-zinc-400 text-xs px-4 py-1.5 rounded-full mb-8 fade-in">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
             Shared expenses, settled fairly
           </div>
 
@@ -76,7 +76,7 @@ export default function Landing() {
           </p>
 
           <div className="flex items-center justify-center gap-3 rise d3">
-            <Link to="/register" className="group inline-flex items-center gap-2 bg-emerald-400 hover:bg-emerald-300 text-[#0a0a0a] font-semibold px-6 py-3 rounded-lg transition">
+            <Link to="/register" className="group inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-fg font-semibold px-6 py-3 rounded-lg transition">
               Get Started
               <ArrowRight size={17} className="group-hover:translate-x-0.5 transition" />
             </Link>
@@ -88,7 +88,7 @@ export default function Landing() {
 
         {/* hero mockup */}
         <div className="relative max-w-4xl mx-auto px-6 pb-20 rise d4">
-          <div className="rounded-2xl border border-zinc-800 bg-[#0f0f0f] shadow-2xl shadow-emerald-950/30 overflow-hidden">
+          <div className="rounded-2xl border border-zinc-800 bg-[#0f0f0f] shadow-2xl shadow-accent/30 overflow-hidden">
             <div className="flex items-center gap-2 px-4 h-10 border-b border-zinc-800 bg-[#0c0c0c]">
               <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
               <div className="w-3 h-3 rounded-full bg-zinc-700"></div>
@@ -108,16 +108,16 @@ export default function Landing() {
                       <div className="w-8 h-8 rounded-full bg-zinc-800 text-zinc-300 flex items-center justify-center text-xs font-bold">{r.n[0]}</div>
                       <span className="text-sm text-zinc-300">{r.n}</span>
                     </div>
-                    <span className={`text-sm font-semibold ${r.pos ? 'text-emerald-400' : 'text-red-400'}`}>{r.amt}</span>
+                    <span className={`text-sm font-semibold ${r.pos ? 'text-accent' : 'text-red-400'}`}>{r.amt}</span>
                   </div>
                 ))}
               </div>
               <div className="flex flex-col justify-center gap-3">
                 <p className="text-xs uppercase tracking-wider text-zinc-500">Suggested settlements</p>
                 {[['Rohan → Aisha', '₹1,180'], ['Dev → Priya', '₹890'], ['Dev → Aisha', '₹1,160']].map(([t, a]) => (
-                  <div key={t} className="flex items-center justify-between bg-emerald-400/5 border border-emerald-400/20 rounded-xl px-4 py-3">
+                  <div key={t} className="flex items-center justify-between bg-accent/5 border border-accent/20 rounded-xl px-4 py-3">
                     <span className="text-sm text-zinc-300">{t}</span>
-                    <span className="text-sm font-bold text-emerald-400">{a}</span>
+                    <span className="text-sm font-bold text-accent">{a}</span>
                   </div>
                 ))}
               </div>
@@ -144,7 +144,7 @@ export default function Landing() {
           <div className="flex gap-10 animate-marquee whitespace-nowrap pr-10">
             {[...USE_CASES, ...USE_CASES].map((u, i) => (
               <span key={i} className="text-xl font-semibold text-zinc-700 flex items-center gap-10">
-                {u}<span className="text-emerald-500/40">◆</span>
+                {u}<span className="text-accent/40">◆</span>
               </span>
             ))}
           </div>
@@ -154,7 +154,7 @@ export default function Landing() {
       {/* ---------- FEATURES ---------- */}
       <section id="features" className="max-w-6xl mx-auto px-6 pt-28 pb-10">
         <Reveal>
-          <p className="text-emerald-400 text-sm font-medium mb-3">Features</p>
+          <p className="text-accent text-sm font-medium mb-3">Features</p>
           <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight max-w-2xl leading-tight">
             Everything you need to settle up — nothing you don't.
           </h2>
@@ -171,7 +171,7 @@ export default function Landing() {
             {[['Rohan → Aisha', '₹1,180'], ['Dev → Priya', '₹890'], ['Dev → Aisha', '₹1,160']].map(([t, a]) => (
               <div key={t} className="flex items-center justify-between bg-[#141414] border border-zinc-800 rounded-xl px-4 py-3.5">
                 <span className="text-sm text-zinc-300">{t}</span>
-                <span className="font-bold text-emerald-400">{a}</span>
+                <span className="font-bold text-accent">{a}</span>
               </div>
             ))}
           </div>
@@ -219,7 +219,7 @@ export default function Landing() {
       <section id="how" className="border-y border-zinc-900 bg-[#0c0c0c] py-28 mt-16">
         <div className="max-w-6xl mx-auto px-6">
           <Reveal>
-            <p className="text-emerald-400 text-sm font-medium mb-3 text-center">How it works</p>
+            <p className="text-accent text-sm font-medium mb-3 text-center">How it works</p>
             <h2 className="text-4xl font-bold text-white tracking-tight text-center mb-16">Settle up in three steps.</h2>
           </Reveal>
           <div className="grid md:grid-cols-3 gap-6">
@@ -229,8 +229,8 @@ export default function Landing() {
               { step: '03', title: 'Settle up', desc: 'See exactly who owes whom, record payments, and watch every balance hit zero.' },
             ].map((s, i) => (
               <Reveal key={s.step} delay={i * 0.1}>
-                <div className="h-full bg-[#111] border border-zinc-800 rounded-2xl p-7 hover:border-emerald-400/30 transition">
-                  <div className="text-emerald-400 font-bold text-sm mb-5">{s.step}</div>
+                <div className="h-full bg-[#111] border border-zinc-800 rounded-2xl p-7 hover:border-accent/30 transition">
+                  <div className="text-accent font-bold text-sm mb-5">{s.step}</div>
                   <h3 className="text-white font-semibold text-lg mb-2">{s.title}</h3>
                   <p className="text-sm text-zinc-400 leading-relaxed">{s.desc}</p>
                 </div>
@@ -249,8 +249,8 @@ export default function Landing() {
         ].map((c, i) => (
           <Reveal key={c.title} delay={i * 0.08}>
             <div className="h-full bg-[#111] border border-zinc-800 rounded-2xl p-7 hover:border-zinc-700 transition">
-              <div className="w-9 h-9 rounded-lg bg-emerald-400/10 border border-emerald-400/20 flex items-center justify-center mb-4">
-                <Check size={16} className="text-emerald-400" />
+              <div className="w-9 h-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center mb-4">
+                <Check size={16} className="text-accent" />
               </div>
               <h3 className="text-white font-semibold mb-2">{c.title}</h3>
               <p className="text-sm text-zinc-400 leading-relaxed">{c.desc}</p>
@@ -263,13 +263,13 @@ export default function Landing() {
       <section className="max-w-5xl mx-auto px-6 pb-28">
         <Reveal>
           <div className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-[#0c0c0c] px-8 py-20 text-center">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-emerald-500/15 blur-[100px] rounded-full"></div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[300px] bg-accent/15 blur-[100px] rounded-full"></div>
             <div className="relative">
               <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight mb-5">
                 Stop chasing friends for money.
               </h2>
               <p className="text-zinc-400 text-lg mb-9 max-w-lg mx-auto">Create your first group in 30 seconds. Free forever, no card required.</p>
-              <Link to="/register" className="inline-flex items-center gap-2 bg-emerald-400 hover:bg-emerald-300 text-[#0a0a0a] font-semibold px-7 py-3.5 rounded-lg transition">
+              <Link to="/register" className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-fg font-semibold px-7 py-3.5 rounded-lg transition">
                 Get Started <ArrowUpRight size={18} />
               </Link>
             </div>
@@ -284,7 +284,7 @@ export default function Landing() {
           <p className="text-sm text-zinc-600">Built with Node.js · Express · React · PostgreSQL · Prisma</p>
           <div className="flex gap-4 text-sm">
             <Link to="/login" className="text-zinc-400 hover:text-white">Sign in</Link>
-            <Link to="/register" className="text-emerald-400 hover:text-emerald-300 font-medium">Get started</Link>
+            <Link to="/register" className="text-accent hover:text-accent font-medium">Get started</Link>
           </div>
         </div>
       </footer>
@@ -297,14 +297,14 @@ function FeatureRow({ n, eyebrow, title, desc, bullets, mockup, reverse }) {
     <section className="max-w-6xl mx-auto px-6 py-14">
       <div className={`grid md:grid-cols-2 gap-12 items-center ${reverse ? 'md:[direction:rtl]' : ''}`}>
         <Reveal className="[direction:ltr]">
-          <div className="text-emerald-400 font-bold text-sm mb-3">{n}</div>
+          <div className="text-accent font-bold text-sm mb-3">{n}</div>
           <p className="text-zinc-500 text-sm font-medium mb-2">{eyebrow}</p>
           <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-4">{title}</h3>
           <p className="text-zinc-400 leading-relaxed mb-6">{desc}</p>
           <ul className="space-y-3">
             {bullets.map(b => (
               <li key={b} className="flex items-center gap-3 text-zinc-300">
-                <span className="w-5 h-5 rounded-full bg-emerald-400/10 border border-emerald-400/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                <span className="w-5 h-5 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center flex-shrink-0">
                   <Check size={12} />
                 </span>
                 <span className="text-sm">{b}</span>

@@ -454,7 +454,7 @@ export default function GroupDetail() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Description *</label>
                 <input required
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50 text-slate-900 placeholder-slate-400"
                   placeholder="e.g. Dinner at Barbeque Nation"
                   value={expenseForm.description} onChange={e => setExpenseForm({ ...expenseForm, description: e.target.value })} />
               </div>
@@ -462,13 +462,13 @@ export default function GroupDetail() {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Amount *</label>
                   <input required type="number" step="0.01" min="0.01"
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50 text-slate-900 placeholder-slate-400"
                     placeholder="0.00"
                     value={expenseForm.amount} onChange={e => setExpenseForm({ ...expenseForm, amount: e.target.value })} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Currency</label>
-                  <select className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
+                  <select className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50 text-slate-900 placeholder-slate-400"
                     value={expenseForm.currency} onChange={e => setExpenseForm({ ...expenseForm, currency: e.target.value })}>
                     <option value="INR">INR (₹)</option>
                     <option value="USD">USD ($)</option>
@@ -484,7 +484,7 @@ export default function GroupDetail() {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Paid by *</label>
                   <select required
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50 text-slate-900 placeholder-slate-400"
                     value={expenseForm.paidById} onChange={e => setExpenseForm({ ...expenseForm, paidById: e.target.value })}>
                     <option value="">Select member</option>
                     {activeMembers.map(m => <option key={m.id} value={m.id}>{m.displayName || m.user?.username}</option>)}
@@ -492,7 +492,7 @@ export default function GroupDetail() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Split type</label>
-                  <select className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
+                  <select className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50 text-slate-900 placeholder-slate-400"
                     value={expenseForm.splitType} onChange={e => setExpenseForm({ ...expenseForm, splitType: e.target.value })}>
                     <option value="equal">Equal</option>
                     <option value="exact">Exact amounts</option>
@@ -504,13 +504,13 @@ export default function GroupDetail() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
                 <input type="date" required
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50 text-slate-900 placeholder-slate-400"
                   value={expenseForm.date} onChange={e => setExpenseForm({ ...expenseForm, date: e.target.value })} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
                 <input
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50 text-slate-900 placeholder-slate-400"
                   placeholder="Optional notes"
                   value={expenseForm.notes} onChange={e => setExpenseForm({ ...expenseForm, notes: e.target.value })} />
               </div>
@@ -540,7 +540,7 @@ export default function GroupDetail() {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Who paid?</label>
                   <select required
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50 text-slate-900 placeholder-slate-400"
                     value={settleForm.paidById} onChange={e => setSettleForm({ ...settleForm, paidById: e.target.value })}>
                     <option value="">Select</option>
                     {group.memberships.map(m => <option key={m.id} value={m.id}>{m.displayName || m.user?.username}</option>)}
@@ -549,7 +549,7 @@ export default function GroupDetail() {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Who received?</label>
                   <select required
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50 text-slate-900 placeholder-slate-400"
                     value={settleForm.paidToId} onChange={e => setSettleForm({ ...settleForm, paidToId: e.target.value })}>
                     <option value="">Select</option>
                     {group.memberships.map(m => <option key={m.id} value={m.id}>{m.displayName || m.user?.username}</option>)}
@@ -560,21 +560,21 @@ export default function GroupDetail() {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Amount (₹)</label>
                   <input required type="number" step="0.01" min="0.01"
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50 text-slate-900 placeholder-slate-400"
                     placeholder="0.00"
                     value={settleForm.amount} onChange={e => setSettleForm({ ...settleForm, amount: e.target.value })} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
                   <input type="date"
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50 text-slate-900 placeholder-slate-400"
                     value={settleForm.date} onChange={e => setSettleForm({ ...settleForm, date: e.target.value })} />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
                 <input
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50"
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent text-sm bg-slate-50 text-slate-900 placeholder-slate-400"
                   placeholder="e.g. UPI transfer"
                   value={settleForm.notes} onChange={e => setSettleForm({ ...settleForm, notes: e.target.value })} />
               </div>

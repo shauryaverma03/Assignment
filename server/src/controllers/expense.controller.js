@@ -5,6 +5,7 @@ const computeSplits = (members, amount, splitType, customSplits) => {
   const splits = [];
 
   if (splitType === 'equal') {
+    if (!members.length) return splits;
     const share = amount / members.length;
     members.forEach(m => splits.push({ memberId: m.id, amountInr: Math.round(share * 100) / 100 }));
     // fix rounding on last person
@@ -35,14 +36,30 @@ const createExpense = async (req, res) => {
     const rate = parseFloat(exchangeRate) || 1;
     const amountInr = parseFloat(amount) * rate;
 
+    // Day-bounded window so a member who joined at any time on the expense date counts as active.
+    const startOfDay = new Date(date); startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(date); endOfDay.setUTCHours(23, 59, 59, 999);
+
     // get active members on expense date
-    const members = await prisma.groupMembership.findMany({
+    let members = await prisma.groupMembership.findMany({
       where: {
         groupId: parseInt(groupId),
-        joinedAt: { lte: new Date(date) },
-        OR: [{ leftAt: null }, { leftAt: { gte: new Date(date) } }],
+        joinedAt: { lte: endOfDay },
+        OR: [{ leftAt: null }, { leftAt: { gte: startOfDay } }],
       },
     });
+
+    // Fallback: if the expense predates everyone's join date, split across all current members
+    // so the expense still records instead of crashing.
+    if (!members.length) {
+      members = await prisma.groupMembership.findMany({
+        where: { groupId: parseInt(groupId), leftAt: null },
+      });
+    }
+
+    if (!members.length) {
+      return res.status(400).json({ error: 'This group has no members to split the expense between.' });
+    }
 
     const splits = computeSplits(members, amountInr, splitType, customSplits || []);
 

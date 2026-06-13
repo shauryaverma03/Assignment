@@ -3,6 +3,7 @@ const prisma = require('../utils/prisma');
 const createGroup = async (req, res) => {
   try {
     const { name, description, defaultCurrency } = req.body;
+    const joinedAt = new Date(); joinedAt.setUTCHours(0, 0, 0, 0);
     const group = await prisma.group.create({
       data: {
         name,
@@ -12,7 +13,7 @@ const createGroup = async (req, res) => {
         memberships: {
           create: {
             userId: req.user.id,
-            joinedAt: new Date(),
+            joinedAt,
             displayName: req.user.username,
           },
         },

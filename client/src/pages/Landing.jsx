@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowUpRight, Check } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Check, LayoutDashboard, LogOut } from 'lucide-react';
 import Logo from '../components/Logo';
 import Reveal from '../components/Reveal';
+import { useAuth } from '../context/AuthContext';
 
 const USE_CASES = ['Flatmates', 'Goa Trips', 'Roommates', 'Couples', 'Office Lunches', 'House Parties', 'Vacations', 'Hostels'];
 
 export default function Landing() {
   const [intro, setIntro] = useState(true);
+  const { user, logout } = useAuth();
   useEffect(() => {
     const t = setTimeout(() => setIntro(false), 2200);
     return () => clearTimeout(t);
@@ -44,12 +46,31 @@ export default function Landing() {
             <a href="#how" className="hover:text-white transition">How it works</a>
             <a href="#why" className="hover:text-white transition">Why Splitwise</a>
           </div>
-          <div className="flex items-center gap-2">
-            <Link to="/login" className="text-sm text-zinc-300 hover:text-white px-4 py-2 transition">Sign in</Link>
-            <Link to="/register" className="text-sm font-semibold text-white bg-accent-grad hover:opacity-90 px-4 py-2 rounded-lg transition">
-              Get Started
-            </Link>
-          </div>
+          {user ? (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2">
+                <div className="w-7 h-7 rounded-full bg-accent-grad flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                  {user.username?.[0]?.toUpperCase()}
+                </div>
+                <span className="text-sm text-zinc-200 font-medium">{user.username}</span>
+              </div>
+              <Link to="/dashboard"
+                className="flex items-center gap-1.5 text-sm font-semibold text-white bg-accent-grad hover:opacity-90 px-4 py-2 rounded-lg transition">
+                <LayoutDashboard size={15} /> Dashboard
+              </Link>
+              <button onClick={logout}
+                className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-red-400 px-2 py-2 transition">
+                <LogOut size={15} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Link to="/login" className="text-sm text-zinc-300 hover:text-white px-4 py-2 transition">Sign in</Link>
+              <Link to="/register" className="text-sm font-semibold text-white bg-accent-grad hover:opacity-90 px-4 py-2 rounded-lg transition">
+                Get Started
+              </Link>
+            </div>
+          )}
         </div>
       </nav>
 

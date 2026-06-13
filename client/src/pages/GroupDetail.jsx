@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { Plus, ArrowLeft, Upload, ChevronRight, Check, X, Info, AlertTriangle, ArrowLeftRight } from 'lucide-react';
+import { Plus, ArrowLeft, Upload, ChevronRight, Check, X, Info, AlertTriangle, ArrowLeftRight, Home } from 'lucide-react';
 
 const TABS = ['Expenses', 'Balances', 'Settlements', 'Members', 'Import'];
 const avatarColors = ['bg-accent/100','bg-violet-500','bg-pink-500','bg-sky-500','bg-orange-500','bg-cyan-500'];
@@ -127,9 +127,14 @@ export default function GroupDetail() {
         {/* Sidebar */}
         <aside className="w-64 min-h-screen bg-white border-r border-slate-200 fixed left-0 top-0 flex flex-col">
           <div className="p-5 border-b border-slate-100">
-            <Link to="/dashboard" className="flex items-center gap-2 text-slate-500 hover:text-accent text-sm transition mb-4">
-              <ArrowLeft size={14} /> All groups
-            </Link>
+            <div className="flex items-center justify-between mb-4">
+              <Link to="/dashboard" className="flex items-center gap-1.5 text-slate-500 hover:text-accent text-sm transition">
+                <ArrowLeft size={14} /> All groups
+              </Link>
+              <Link to="/" className="flex items-center gap-1 text-slate-400 hover:text-accent text-sm transition">
+                <Home size={14} />
+              </Link>
+            </div>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-accent-grad flex items-center justify-center text-white font-bold text-lg">
                 {group.name[0].toUpperCase()}

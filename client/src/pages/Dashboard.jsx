@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Users, Receipt, Wallet, ArrowRight, LogOut, Sparkles } from 'lucide-react';
+import { Plus, Users, Receipt, Wallet, ArrowRight, LogOut, Sparkles, Home } from 'lucide-react';
 import Logo from '../components/Logo';
 
 const avatarGrads = [
@@ -88,7 +88,11 @@ export default function Dashboard() {
             </button>
           </div>
 
-          <div className="p-4 border-t border-slate-100">
+          <div className="p-4 border-t border-slate-100 space-y-2">
+            <Link to="/"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-slate-500 hover:text-accent hover:bg-slate-50 text-sm transition w-full">
+              <Home size={15} /> Home
+            </Link>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-accent-grad flex items-center justify-center text-white text-sm font-bold">

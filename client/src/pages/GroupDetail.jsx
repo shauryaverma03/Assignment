@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { Plus, ArrowLeft, Upload, ChevronRight, Check, X, Info, AlertTriangle } from 'lucide-react';
+import { Plus, ArrowLeft, Upload, ChevronRight, Check, X, Info, AlertTriangle, ArrowLeftRight } from 'lucide-react';
 
 const TABS = ['Expenses', 'Balances', 'Settlements', 'Members', 'Import'];
-const avatarColors = ['bg-indigo-500','bg-purple-500','bg-pink-500','bg-emerald-500','bg-orange-500','bg-cyan-500'];
+const avatarColors = ['bg-emerald-500','bg-violet-500','bg-pink-500','bg-sky-500','bg-orange-500','bg-cyan-500'];
 
 const Avatar = ({ name, index, size = 'sm' }) => {
   const letter = (name || '?')[0].toUpperCase();
@@ -112,7 +112,7 @@ export default function GroupDetail() {
   if (!group) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="text-center">
-        <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
         <p className="text-slate-400 text-sm">Loading group...</p>
       </div>
     </div>
@@ -127,11 +127,11 @@ export default function GroupDetail() {
         {/* Sidebar */}
         <aside className="w-64 min-h-screen bg-white border-r border-slate-200 fixed left-0 top-0 flex flex-col">
           <div className="p-5 border-b border-slate-100">
-            <Link to="/dashboard" className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 text-sm transition mb-4">
+            <Link to="/dashboard" className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 text-sm transition mb-4">
               <ArrowLeft size={14} /> All groups
             </Link>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-bold text-lg">
                 {group.name[0].toUpperCase()}
               </div>
               <div>
@@ -143,7 +143,7 @@ export default function GroupDetail() {
           <nav className="flex-1 p-4 space-y-1">
             {TABS.map(t => (
               <button key={t} onClick={() => setTab(t)}
-                className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition flex items-center justify-between ${tab === t ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'}`}>
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition flex items-center justify-between ${tab === t ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-slate-50'}`}>
                 <span>{t}</span>
                 {t === 'Import' && importLogs.filter(l => l.status === 'pending').length > 0 && (
                   <span className="bg-orange-400 text-white text-xs px-1.5 py-0.5 rounded-full">{importLogs.filter(l => l.status === 'pending').length}</span>
@@ -153,7 +153,7 @@ export default function GroupDetail() {
           </nav>
           <div className="p-4 border-t border-slate-100 space-y-2">
             <button onClick={() => setShowAddExpense(true)}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition">
+              className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition">
               <Plus size={15} /> Add Expense
             </button>
             <button onClick={() => setShowSettle(true)}
@@ -177,12 +177,12 @@ export default function GroupDetail() {
                   <h3 className="font-bold text-slate-700 mb-2">No expenses yet</h3>
                   <p className="text-slate-400 text-sm mb-5">Add your first expense or import a CSV file</p>
                   <div className="flex gap-3 justify-center">
-                    <button onClick={() => setShowAddExpense(true)} className="bg-indigo-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-indigo-700">Add Expense</button>
+                    <button onClick={() => setShowAddExpense(true)} className="bg-emerald-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-emerald-700">Add Expense</button>
                     <button onClick={() => setTab('Import')} className="border border-slate-200 text-slate-600 px-5 py-2 rounded-xl text-sm font-medium hover:bg-slate-50">Import CSV</button>
                   </div>
                 </div>
               ) : group.expenses.map((exp, i) => (
-                <div key={exp.id} className="bg-white rounded-2xl border border-slate-200 p-4 hover:border-indigo-200 hover:shadow-sm transition group">
+                <div key={exp.id} className="bg-white rounded-2xl border border-slate-200 p-4 hover:border-emerald-200 hover:shadow-sm transition group">
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-xl flex-shrink-0">🧾</div>
@@ -195,7 +195,7 @@ export default function GroupDetail() {
                           {exp.importRow && <span className="text-xs bg-slate-100 text-slate-400 px-2 py-0.5 rounded-full">Row {exp.importRow}</span>}
                         </div>
                         <p className="text-sm text-slate-500">
-                          Paid by <span className="text-indigo-600 font-medium">{exp.paidBy?.displayName || 'Unknown'}</span>
+                          Paid by <span className="text-emerald-600 font-medium">{exp.paidBy?.displayName || 'Unknown'}</span>
                           <span className="mx-2 text-slate-300">·</span>
                           {new Date(exp.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
@@ -230,7 +230,7 @@ export default function GroupDetail() {
                 {balances.members.map((m, i) => (
                   <div key={m.id}
                     onClick={() => fetchBreakdown(m)}
-                    className="bg-white rounded-2xl border border-slate-200 p-5 hover:border-indigo-300 hover:shadow-md transition cursor-pointer group">
+                    className="bg-white rounded-2xl border border-slate-200 p-5 hover:border-emerald-300 hover:shadow-md transition cursor-pointer group">
                     <div className="flex items-center gap-3 mb-3">
                       <Avatar name={m.displayName} index={i} size="md" />
                       <span className="font-semibold text-slate-800">{m.displayName}</span>
@@ -241,7 +241,7 @@ export default function GroupDetail() {
                     <p className="text-xs text-slate-400">
                       {m.net > 0 ? '← gets back' : m.net < 0 ? '→ owes' : 'all settled'}
                     </p>
-                    <p className="text-xs text-indigo-400 mt-2 group-hover:text-indigo-600 transition">Click for breakdown →</p>
+                    <p className="text-xs text-emerald-400 mt-2 group-hover:text-emerald-600 transition">Click for breakdown →</p>
                   </div>
                 ))}
               </div>
@@ -309,7 +309,7 @@ export default function GroupDetail() {
             <div className="space-y-3">
               <div className="flex justify-between items-center mb-2">
                 <p className="text-slate-500 text-sm">{settlements.length} settlement{settlements.length !== 1 ? 's' : ''} recorded</p>
-                <button onClick={() => setShowSettle(true)} className="flex items-center gap-2 text-indigo-600 text-sm font-medium hover:underline">
+                <button onClick={() => setShowSettle(true)} className="flex items-center gap-2 text-emerald-600 text-sm font-medium hover:underline">
                   <Plus size={14} /> Record payment
                 </button>
               </div>
@@ -322,7 +322,7 @@ export default function GroupDetail() {
               ) : settlements.map(s => (
                 <div key={s.id} className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-xl">💸</div>
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600"><ArrowLeftRight size={18} /></div>
                     <div>
                       <p className="font-medium text-slate-800 text-sm">
                         <span className="text-red-500">{s.paidBy?.displayName}</span>
@@ -374,11 +374,11 @@ export default function GroupDetail() {
           {/* IMPORT */}
           {tab === 'Import' && (
             <div className="space-y-5">
-              <div className="bg-white rounded-2xl border-2 border-dashed border-indigo-200 p-10 text-center hover:border-indigo-400 transition">
+              <div className="bg-white rounded-2xl border-2 border-dashed border-emerald-200 p-10 text-center hover:border-emerald-400 transition">
                 <div className="text-5xl mb-3">📥</div>
                 <h3 className="font-bold text-slate-800 mb-1">Import CSV File</h3>
                 <p className="text-slate-400 text-sm mb-5">Upload <strong>expenses_export.csv</strong> — all anomalies will be detected and logged</p>
-                <label className={`inline-flex items-center gap-2 cursor-pointer ${uploading ? 'opacity-50 cursor-not-allowed' : ''} bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-md shadow-indigo-200`}>
+                <label className={`inline-flex items-center gap-2 cursor-pointer ${uploading ? 'opacity-50 cursor-not-allowed' : ''} bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-md shadow-emerald-200`}>
                   <Upload size={16} />
                   {uploading ? 'Importing...' : 'Choose CSV File'}
                   <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" disabled={uploading} />
@@ -454,7 +454,7 @@ export default function GroupDetail() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Description *</label>
                 <input required
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
                   placeholder="e.g. Dinner at Barbeque Nation"
                   value={expenseForm.description} onChange={e => setExpenseForm({ ...expenseForm, description: e.target.value })} />
               </div>
@@ -462,13 +462,13 @@ export default function GroupDetail() {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Amount *</label>
                   <input required type="number" step="0.01" min="0.01"
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
                     placeholder="0.00"
                     value={expenseForm.amount} onChange={e => setExpenseForm({ ...expenseForm, amount: e.target.value })} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Currency</label>
-                  <select className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                  <select className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
                     value={expenseForm.currency} onChange={e => setExpenseForm({ ...expenseForm, currency: e.target.value })}>
                     <option value="INR">INR (₹)</option>
                     <option value="USD">USD ($)</option>
@@ -484,7 +484,7 @@ export default function GroupDetail() {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Paid by *</label>
                   <select required
-                    className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                    className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
                     value={expenseForm.paidById} onChange={e => setExpenseForm({ ...expenseForm, paidById: e.target.value })}>
                     <option value="">Select member</option>
                     {activeMembers.map(m => <option key={m.id} value={m.id}>{m.displayName || m.user?.username}</option>)}
@@ -492,7 +492,7 @@ export default function GroupDetail() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Split type</label>
-                  <select className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                  <select className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
                     value={expenseForm.splitType} onChange={e => setExpenseForm({ ...expenseForm, splitType: e.target.value })}>
                     <option value="equal">Equal</option>
                     <option value="exact">Exact amounts</option>
@@ -504,13 +504,13 @@ export default function GroupDetail() {
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Date *</label>
                 <input type="date" required
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
                   value={expenseForm.date} onChange={e => setExpenseForm({ ...expenseForm, date: e.target.value })} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
                 <input
-                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
                   placeholder="Optional notes"
                   value={expenseForm.notes} onChange={e => setExpenseForm({ ...expenseForm, notes: e.target.value })} />
               </div>
@@ -518,7 +518,7 @@ export default function GroupDetail() {
                 <button type="button" onClick={() => setShowAddExpense(false)}
                   className="flex-1 border border-slate-200 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50">Cancel</button>
                 <button type="submit"
-                  className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition">
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition">
                   Add Expense
                 </button>
               </div>
@@ -540,7 +540,7 @@ export default function GroupDetail() {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Who paid?</label>
                   <select required
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
                     value={settleForm.paidById} onChange={e => setSettleForm({ ...settleForm, paidById: e.target.value })}>
                     <option value="">Select</option>
                     {group.memberships.map(m => <option key={m.id} value={m.id}>{m.displayName || m.user?.username}</option>)}
@@ -549,7 +549,7 @@ export default function GroupDetail() {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Who received?</label>
                   <select required
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
                     value={settleForm.paidToId} onChange={e => setSettleForm({ ...settleForm, paidToId: e.target.value })}>
                     <option value="">Select</option>
                     {group.memberships.map(m => <option key={m.id} value={m.id}>{m.displayName || m.user?.username}</option>)}
@@ -560,21 +560,21 @@ export default function GroupDetail() {
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Amount (₹)</label>
                   <input required type="number" step="0.01" min="0.01"
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
                     placeholder="0.00"
                     value={settleForm.amount} onChange={e => setSettleForm({ ...settleForm, amount: e.target.value })} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
                   <input type="date"
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
                     value={settleForm.date} onChange={e => setSettleForm({ ...settleForm, date: e.target.value })} />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
                 <input
-                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm bg-slate-50"
                   placeholder="e.g. UPI transfer"
                   value={settleForm.notes} onChange={e => setSettleForm({ ...settleForm, notes: e.target.value })} />
               </div>
@@ -582,7 +582,7 @@ export default function GroupDetail() {
                 <button type="button" onClick={() => setShowSettle(false)}
                   className="flex-1 border border-slate-200 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50">Cancel</button>
                 <button type="submit"
-                  className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition">
+                  className="flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition">
                   Record Payment
                 </button>
               </div>

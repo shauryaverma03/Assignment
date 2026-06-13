@@ -14,11 +14,7 @@ const balanceRoutes = require('./routes/balance.routes');
 const app = express();
 
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    process.env.CLIENT_URL,
-  ].filter(Boolean),
+  origin: true,
   credentials: true,
 }));
 app.use(express.json());

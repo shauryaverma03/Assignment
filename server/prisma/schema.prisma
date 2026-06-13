@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  createdGroups    Group[]
+  memberships      GroupMembership[]
+  createdExpenses  Expense[]
+  resolvedLogs     ImportLog[]       @relation("ResolvedBy")
+}
+
+model Group {
+  id              Int      @id @default(autoincrement())
+  name            String
+  description     String   @default("")
+  defaultCurrency String   @default("INR")
+  createdAt       DateTime @default(now())
+
+  createdBy   User  @relation(fields: [createdById], references: [id])
+  createdById Int
+
+  memberships  GroupMembership[]
+  expenses     Expense[]
+  settlements  Settlement[]
+  importLogs   ImportLog[]
+}
+
+model GroupMembership {
+  id          Int       @id @default(autoincrement())
+  joinedAt    DateTime
+  leftAt      DateTime?
+  displayName String    @default("")
+
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId Int
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId  Int
+
+  expensesPaid  Expense[]     @relation("PaidBy")
+  splits        ExpenseSplit[]
+  settlementsPaid     Settlement[] @relation("SettlementPaidBy")
+  settlementsReceived Settlement[] @relation("SettlementPaidTo")
+
+  @@unique([groupId, userId, joinedAt])
+}
+
+model Expense {
+  id           Int      @id @default(autoincrement())
+  description  String
+  amount       Decimal  @db.Decimal(12, 2)
+  currency     String   @default("INR")
+  exchangeRate Decimal  @default(1.0000) @db.Decimal(10, 4)
+  amountInr    Decimal  @db.Decimal(12, 2)
+  splitType    String   @default("equal")
+  date         DateTime @db.Date
+  isSettlement Boolean  @default(false)
+  notes        String   @default("")
+  importRow    Int?
+  createdAt    DateTime @default(now())
+
+  group       Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId     Int
+  paidBy      GroupMembership @relation("PaidBy", fields: [paidById], references: [id])
+  paidById    Int
+  createdBy   User?           @relation(fields: [createdById], references: [id])
+  createdById Int?
+
+  splits      ExpenseSplit[]
+  importLog   ImportLog[]
+}
+
+model ExpenseSplit {
+  id         Int     @id @default(autoincrement())
+  amountInr  Decimal @db.Decimal(12, 2)
+  percentage Decimal? @db.Decimal(5, 2)
+  shares     Int?
+
+  expense   Expense         @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  expenseId Int
+  member    GroupMembership @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  memberId  Int
+}
+
+model Settlement {
+  id        Int      @id @default(autoincrement())
+  amount    Decimal  @db.Decimal(12, 2)
+  date      DateTime @db.Date
+  notes     String   @default("")
+  createdAt DateTime @default(now())
+
+  group      Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId    Int
+  paidBy     GroupMembership @relation("SettlementPaidBy", fields: [paidById], references: [id])
+  paidById   Int
+  paidTo     GroupMembership @relation("SettlementPaidTo", fields: [paidToId], references: [id])
+  paidToId   Int
+}
+
+model ImportLog {
+  id               Int       @id @default(autoincrement())
+  rowNumber        Int
+  rawData          Json
+  issueType        String
+  issueDescription String
+  severity         String    @default("warning")
+  status           String    @default("pending")
+  actionTaken      String    @default("")
+  resolvedAt       DateTime?
+  createdAt        DateTime  @default(now())
+
+  group          Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId        Int
+  resolvedBy     User?    @relation("ResolvedBy", fields: [resolvedById], references: [id])
+  resolvedById   Int?
+  linkedExpense  Expense? @relation(fields: [linkedExpenseId], references: [id])
+  linkedExpenseId Int?
+}

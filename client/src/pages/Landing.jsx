@@ -8,12 +8,15 @@ import { useAuth } from '../context/AuthContext';
 const USE_CASES = ['Flatmates', 'Goa Trips', 'Roommates', 'Couples', 'Office Lunches', 'House Parties', 'Vacations', 'Hostels'];
 
 export default function Landing() {
-  const [intro, setIntro] = useState(true);
+  // Only play intro on first ever visit, not on every navigation back
+  const [intro, setIntro] = useState(() => !sessionStorage.getItem('introPlayed'));
   const { user, logout } = useAuth();
   useEffect(() => {
+    if (!intro) return;
+    sessionStorage.setItem('introPlayed', '1');
     const t = setTimeout(() => setIntro(false), 2200);
     return () => clearTimeout(t);
-  }, []);
+  }, [intro]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-zinc-200 overflow-x-hidden">

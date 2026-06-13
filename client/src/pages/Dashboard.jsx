@@ -1,22 +1,28 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { Plus, Users, Receipt } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { Plus, Users, Receipt, TrendingUp, ArrowRight, LogOut } from 'lucide-react';
 
 export default function Dashboard() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [groups, setGroups] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', description: '' });
   const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({ totalGroups: 0, totalExpenses: 0 });
 
   const fetchGroups = async () => {
     try {
       const res = await api.get('/groups');
       setGroups(res.data);
-    } catch {
-      toast.error('Failed to load groups');
-    }
+      setStats({
+        totalGroups: res.data.length,
+        totalExpenses: res.data.reduce((s, g) => s + (g._count?.expenses || 0), 0),
+      });
+    } catch { toast.error('Failed to load groups'); }
   };
 
   useEffect(() => { fetchGroups(); }, []);
@@ -25,78 +31,199 @@ export default function Dashboard() {
     e.preventDefault();
     setLoading(true);
     try {
-      await api.post('/groups', form);
+      const res = await api.post('/groups', form);
       toast.success('Group created!');
       setShowCreate(false);
       setForm({ name: '', description: '' });
       fetchGroups();
     } catch (err) {
       toast.error(err.response?.data?.error || 'Failed');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
+  const handleLogout = () => { logout(); navigate('/'); };
+
+  const avatarColors = ['bg-indigo-500','bg-purple-500','bg-pink-500','bg-emerald-500','bg-orange-500','bg-cyan-500'];
+
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">My Groups</h1>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition text-sm"
-        >
-          <Plus size={16} /> New Group
-        </button>
+    <div className="min-h-screen bg-slate-50">
+      {/* Sidebar + content layout */}
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="w-64 min-h-screen bg-white border-r border-slate-200 flex flex-col fixed left-0 top-0">
+          <div className="p-5 border-b border-slate-100">
+            <Link to="/" className="flex items-center gap-2 font-bold text-xl">
+              <span className="text-2xl">💸</span>
+              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">SplitWise</span>
+            </Link>
+          </div>
+
+          <div className="flex-1 p-4">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">My Groups</p>
+            <div className="space-y-1">
+              {groups.map((g, i) => (
+                <Link key={g.id} to={`/groups/${g.id}`}
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 transition group">
+                  <span className={`w-8 h-8 rounded-lg ${avatarColors[i % avatarColors.length]} text-white flex items-center justify-center text-sm font-bold flex-shrink-0`}>
+                    {g.name[0].toUpperCase()}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{g.name}</p>
+                    <p className="text-xs text-slate-400">{g.memberships?.length} members</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+            <button onClick={() => setShowCreate(true)}
+              className="mt-3 w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-slate-300 hover:border-indigo-400 text-slate-400 hover:text-indigo-500 text-sm transition">
+              <Plus size={14} /> New Group
+            </button>
+          </div>
+
+          <div className="p-4 border-t border-slate-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
+                  {user?.username?.[0]?.toUpperCase()}
+                </div>
+                <span className="text-sm font-medium text-slate-700">{user?.username}</span>
+              </div>
+              <button onClick={handleLogout} className="text-slate-400 hover:text-red-500 transition">
+                <LogOut size={16} />
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main content */}
+        <main className="ml-64 flex-1 p-8">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
+            <p className="text-slate-500 text-sm mt-1">Welcome back, {user?.username}! Here's your overview.</p>
+          </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-5 mb-8">
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-slate-500 text-sm">Total Groups</span>
+                <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center">
+                  <Users size={18} className="text-indigo-600" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-slate-800">{stats.totalGroups}</p>
+              <p className="text-xs text-slate-400 mt-1">Active groups</p>
+            </div>
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-slate-500 text-sm">Total Expenses</span>
+                <div className="w-9 h-9 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <Receipt size={18} className="text-purple-600" />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-slate-800">{stats.totalExpenses}</p>
+              <p className="text-xs text-slate-400 mt-1">Across all groups</p>
+            </div>
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-5 text-white shadow-lg shadow-indigo-200">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-indigo-200 text-sm">Quick Action</span>
+                <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+                  <TrendingUp size={18} className="text-white" />
+                </div>
+              </div>
+              <p className="text-lg font-bold">Add an expense</p>
+              <p className="text-indigo-200 text-xs mt-1">Open any group to add</p>
+            </div>
+          </div>
+
+          {/* Groups grid */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bold text-slate-800 text-lg">Your Groups</h2>
+            <button onClick={() => setShowCreate(true)}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
+              <Plus size={15} /> New Group
+            </button>
+          </div>
+
+          {groups.length === 0 ? (
+            <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-16 text-center">
+              <div className="text-5xl mb-4">👥</div>
+              <h3 className="font-bold text-slate-700 text-lg mb-2">No groups yet</h3>
+              <p className="text-slate-400 text-sm mb-6">Create a group to start tracking shared expenses</p>
+              <button onClick={() => setShowCreate(true)}
+                className="bg-indigo-600 text-white px-6 py-2.5 rounded-xl hover:bg-indigo-700 transition text-sm font-medium">
+                Create your first group
+              </button>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {groups.map((g, i) => (
+                <Link key={g.id} to={`/groups/${g.id}`}
+                  className="bg-white rounded-2xl border border-slate-200 p-5 hover:border-indigo-300 hover:shadow-md transition group">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`w-11 h-11 rounded-xl ${avatarColors[i % avatarColors.length]} text-white flex items-center justify-center text-xl font-bold`}>
+                      {g.name[0].toUpperCase()}
+                    </div>
+                    <span className="text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full font-medium">
+                      {g._count?.expenses || 0} expenses
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-slate-800 group-hover:text-indigo-600 transition mb-1">{g.name}</h3>
+                  <p className="text-slate-400 text-sm mb-4 truncate">{g.description || 'No description'}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex -space-x-2">
+                      {g.memberships?.slice(0, 4).map((m, j) => (
+                        <div key={m.id} className={`w-7 h-7 rounded-full ${avatarColors[(i+j+1) % avatarColors.length]} border-2 border-white flex items-center justify-center text-white text-xs font-bold`}>
+                          {(m.displayName || m.user?.username || '?')[0].toUpperCase()}
+                        </div>
+                      ))}
+                      {g.memberships?.length > 4 && (
+                        <div className="w-7 h-7 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-slate-500 text-xs font-medium">
+                          +{g.memberships.length - 4}
+                        </div>
+                      )}
+                    </div>
+                    <ArrowRight size={16} className="text-slate-300 group-hover:text-indigo-400 transition" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </main>
       </div>
 
+      {/* Create Group Modal */}
       {showCreate && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-            <h2 className="text-lg font-bold mb-4">Create Group</h2>
-            <form onSubmit={createGroup} className="space-y-3">
-              <input
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                placeholder="Group name" required
-                value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-              />
-              <input
-                className="w-full border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                placeholder="Description (optional)"
-                value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-              />
-              <div className="flex gap-2">
-                <button type="button" onClick={() => setShowCreate(false)} className="flex-1 border border-slate-300 py-2 rounded-lg text-sm hover:bg-slate-50">Cancel</button>
-                <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 text-white py-2 rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50">
-                  {loading ? 'Creating...' : 'Create'}
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <h2 className="text-lg font-bold mb-1 text-slate-800">Create a New Group</h2>
+            <p className="text-slate-500 text-sm mb-5">Give your group a name and start tracking expenses together.</p>
+            <form onSubmit={createGroup} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Group name *</label>
+                <input required
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                  placeholder="e.g. Flat 4B, Goa Trip 2024..."
+                  value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                <input
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm bg-slate-50"
+                  placeholder="Optional description"
+                  value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button type="button" onClick={() => setShowCreate(false)}
+                  className="flex-1 border border-slate-200 py-2.5 rounded-xl text-sm hover:bg-slate-50 font-medium text-slate-600">Cancel</button>
+                <button type="submit" disabled={loading}
+                  className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 hover:from-indigo-500 hover:to-purple-500 transition">
+                  {loading ? 'Creating...' : 'Create Group'}
                 </button>
               </div>
             </form>
           </div>
-        </div>
-      )}
-
-      {groups.length === 0 ? (
-        <div className="text-center py-16 text-slate-400">
-          <Users size={48} className="mx-auto mb-3 opacity-30" />
-          <p>No groups yet. Create one to get started.</p>
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {groups.map(g => (
-            <Link key={g.id} to={`/groups/${g.id}`}
-              className="bg-white rounded-xl p-5 border border-slate-200 hover:border-indigo-300 hover:shadow-md transition group"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <h2 className="font-bold text-slate-800 group-hover:text-indigo-600">{g.name}</h2>
-                <span className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">{g._count.expenses} expenses</span>
-              </div>
-              <p className="text-slate-500 text-sm mb-3">{g.description || 'No description'}</p>
-              <div className="flex items-center gap-1 text-xs text-slate-400">
-                <Users size={12} />
-                <span>{g.memberships.length} members</span>
-              </div>
-            </Link>
-          ))}
         </div>
       )}
     </div>

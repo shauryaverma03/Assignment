@@ -131,7 +131,7 @@ export default function GroupDetail() {
               <ArrowLeft size={14} /> All groups
             </Link>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-accent flex items-center justify-center text-white font-bold text-lg">
+              <div className="w-10 h-10 rounded-xl bg-accent-grad flex items-center justify-center text-white font-bold text-lg">
                 {group.name[0].toUpperCase()}
               </div>
               <div>
@@ -153,7 +153,7 @@ export default function GroupDetail() {
           </nav>
           <div className="p-4 border-t border-slate-100 space-y-2">
             <button onClick={() => setShowAddExpense(true)}
-              className="w-full bg-gradient-to-r from-accent to-accent text-white py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition">
+              className="w-full bg-accent-grad text-white py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition">
               <Plus size={15} /> Add Expense
             </button>
             <button onClick={() => setShowSettle(true)}
@@ -378,7 +378,7 @@ export default function GroupDetail() {
                 <div className="text-5xl mb-3">📥</div>
                 <h3 className="font-bold text-slate-800 mb-1">Import CSV File</h3>
                 <p className="text-slate-400 text-sm mb-5">Upload <strong>expenses_export.csv</strong> — all anomalies will be detected and logged</p>
-                <label className={`inline-flex items-center gap-2 cursor-pointer ${uploading ? 'opacity-50 cursor-not-allowed' : ''} bg-gradient-to-r from-accent to-accent text-white px-6 py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-md shadow-accent`}>
+                <label className={`inline-flex items-center gap-2 cursor-pointer ${uploading ? 'opacity-50 cursor-not-allowed' : ''} bg-accent-grad text-white px-6 py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-md shadow-accent`}>
                   <Upload size={16} />
                   {uploading ? 'Importing...' : 'Choose CSV File'}
                   <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" disabled={uploading} />
@@ -518,7 +518,7 @@ export default function GroupDetail() {
                 <button type="button" onClick={() => setShowAddExpense(false)}
                   className="flex-1 border border-slate-200 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50">Cancel</button>
                 <button type="submit"
-                  className="flex-1 bg-gradient-to-r from-accent to-accent text-white py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition">
+                  className="flex-1 bg-accent-grad text-white py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition">
                   Add Expense
                 </button>
               </div>
@@ -582,7 +582,7 @@ export default function GroupDetail() {
                 <button type="button" onClick={() => setShowSettle(false)}
                   className="flex-1 border border-slate-200 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50">Cancel</button>
                 <button type="submit"
-                  className="flex-1 bg-gradient-to-r from-accent to-accent text-white py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition">
+                  className="flex-1 bg-accent-grad text-white py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition">
                   Record Payment
                 </button>
               </div>

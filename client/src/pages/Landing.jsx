@@ -46,7 +46,7 @@ export default function Landing() {
           </div>
           <div className="flex items-center gap-2">
             <Link to="/login" className="text-sm text-zinc-300 hover:text-white px-4 py-2 transition">Sign in</Link>
-            <Link to="/register" className="text-sm font-semibold text-accent-fg bg-accent hover:bg-accent-hover px-4 py-2 rounded-lg transition">
+            <Link to="/register" className="text-sm font-semibold text-white bg-accent-grad hover:opacity-90 px-4 py-2 rounded-lg transition">
               Get Started
             </Link>
           </div>
@@ -67,7 +67,7 @@ export default function Landing() {
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white leading-[1.05] mb-7 rise">
             Splitting money is messy.<br />
-            <span className="text-zinc-500">We handle the math.</span>
+            <span className="text-accent-grad">We handle the math.</span>
           </h1>
 
           <p className="text-lg text-zinc-400 max-w-2xl mx-auto mb-10 rise d2">
@@ -76,7 +76,7 @@ export default function Landing() {
           </p>
 
           <div className="flex items-center justify-center gap-3 rise d3">
-            <Link to="/register" className="group inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-fg font-semibold px-6 py-3 rounded-lg transition">
+            <Link to="/register" className="group inline-flex items-center gap-2 bg-accent-grad hover:opacity-90 text-white font-semibold px-6 py-3 rounded-lg shadow-accent-glow transition">
               Get Started
               <ArrowRight size={17} className="group-hover:translate-x-0.5 transition" />
             </Link>
@@ -269,7 +269,7 @@ export default function Landing() {
                 Stop chasing friends for money.
               </h2>
               <p className="text-zinc-400 text-lg mb-9 max-w-lg mx-auto">Create your first group in 30 seconds. Free forever, no card required.</p>
-              <Link to="/register" className="inline-flex items-center gap-2 bg-accent hover:bg-accent-hover text-accent-fg font-semibold px-7 py-3.5 rounded-lg transition">
+              <Link to="/register" className="inline-flex items-center gap-2 bg-accent-grad hover:opacity-90 text-white font-semibold px-7 py-3.5 rounded-lg shadow-accent-glow transition">
                 Get Started <ArrowUpRight size={18} />
               </Link>
             </div>

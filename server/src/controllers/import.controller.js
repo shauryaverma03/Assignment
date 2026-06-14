@@ -1,14 +1,11 @@
 const prisma = require('../utils/prisma');
 const csv = require('csv-parser');
 const fs = require('fs');
-const path = require('path');
 
 const USD_TO_INR = parseFloat(process.env.USD_TO_INR) || 83.5;
 
-// Normalize member name to a standard form
 const normalizeName = (name) => name?.trim().toLowerCase();
 
-// Known members from context
 const KNOWN_MEMBERS = {
   aisha: { joinedAt: new Date('2024-02-01'), leftAt: null },
   rohan: { joinedAt: new Date('2024-02-01'), leftAt: null },
@@ -28,12 +25,11 @@ const parseAmount = (val) => {
 const parseDate = (val) => {
   if (!val) return null;
   const cleaned = String(val).trim();
-  // Try multiple formats
   const formats = [
-    /^(\d{4})-(\d{2})-(\d{2})$/,             // YYYY-MM-DD
-    /^(\d{2})\/(\d{2})\/(\d{4})$/,             // DD/MM/YYYY
-    /^(\d{2})-(\d{2})-(\d{4})$/,               // DD-MM-YYYY
-    /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/,         // M/D/YYYY
+    /^(\d{4})-(\d{2})-(\d{2})$/,
+    /^(\d{2})\/(\d{2})\/(\d{4})$/,
+    /^(\d{2})-(\d{2})-(\d{4})$/,
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/,
   ];
   for (const fmt of formats) {
     const m = cleaned.match(fmt);
@@ -45,7 +41,6 @@ const parseDate = (val) => {
       if (!isNaN(d.getTime())) return d;
     }
   }
-  // fallback
   const d = new Date(cleaned);
   return isNaN(d.getTime()) ? null : d;
 };
@@ -58,6 +53,15 @@ const detectCurrency = (raw) => {
   return { currency: 'INR', rate: 1 };
 };
 
+const getMemberName = (row) => {
+  const fields = ['split_with', 'members', 'participants', 'Members', 'Split With'];
+  for (const f of fields) if (row[f]) return row[f];
+  return '';
+};
+
+const getPaidBy = (row) =>
+  (row.paid_by || row.paidBy || row.PaidBy || row['Paid By'] || row['paid by'] || '').trim();
+
 const importCSV = async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
@@ -68,7 +72,6 @@ const importCSV = async (req, res) => {
   const anomalies = [];
   const imported = [];
 
-  // Parse CSV
   await new Promise((resolve, reject) => {
     fs.createReadStream(req.file.path)
       .pipe(csv())
@@ -77,20 +80,18 @@ const importCSV = async (req, res) => {
       .on('error', reject);
   });
 
-  // Get or create memberships
-  const membershipCache = {}; // displayName -> GroupMembership
+  const membershipCache = {};
 
   const getMembership = async (name) => {
+    if (!name || !name.trim()) return null;
     const key = normalizeName(name);
     if (membershipCache[key]) return membershipCache[key];
 
-    // Look up existing membership by displayName
     let m = await prisma.groupMembership.findFirst({
-      where: { groupId, displayName: { equals: name, mode: 'insensitive' } },
+      where: { groupId, displayName: { equals: name.trim(), mode: 'insensitive' } },
     });
 
     if (!m) {
-      // Create a placeholder user and membership
       let user = await prisma.user.findFirst({ where: { username: { equals: key } } });
       if (!user) {
         const bcrypt = require('bcryptjs');
@@ -100,7 +101,7 @@ const importCSV = async (req, res) => {
       }
       const known = KNOWN_MEMBERS[key] || { joinedAt: new Date('2024-02-01'), leftAt: null };
       m = await prisma.groupMembership.create({
-        data: { groupId, userId: user.id, displayName: name, joinedAt: known.joinedAt, leftAt: known.leftAt },
+        data: { groupId, userId: user.id, displayName: name.trim(), joinedAt: known.joinedAt, leftAt: known.leftAt },
       });
     }
 
@@ -108,26 +109,36 @@ const importCSV = async (req, res) => {
     return m;
   };
 
-  // Track seen expenses for duplicate detection
-  const seen = new Map(); // key: description+date+amount -> row index
+  // PRE-PASS: create all memberships so active-member queries return correct results
+  const allNames = new Set();
+  for (const row of rows) {
+    const payer = getPaidBy(row);
+    if (payer) allNames.add(payer);
+    const rawMembers = getMemberName(row);
+    if (rawMembers) {
+      rawMembers.split(/[,;|]/).map(s => s.trim()).filter(Boolean).forEach(n => allNames.add(n));
+    }
+  }
+  for (const name of allNames) {
+    await getMembership(name);
+  }
+
+  const seen = new Map();
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
-    const rowNum = i + 2; // 1-indexed, row 1 is header
+    const rowNum = i + 2;
     const issues = [];
 
-    // --- Anomaly Detection ---
-
-    // 1. Missing description
-    const description = (row.description || row.Description || row.expense || row.Expense || '').trim();
+    const description = (
+      row.description || row.Description || row.expense || row.Expense || row['Expense Description'] || ''
+    ).trim();
     if (!description) issues.push({ type: 'missing_description', desc: 'No description provided', severity: 'warning' });
 
-    // 2. Missing or unparseable date
     const rawDate = row.date || row.Date || row.DATE || '';
     const date = parseDate(rawDate);
     if (!date) issues.push({ type: 'invalid_date', desc: `Cannot parse date: "${rawDate}"`, severity: 'error' });
 
-    // 3. Missing or invalid amount
     const rawAmount = row.amount || row.Amount || row.AMOUNT || '';
     const rawAmountStr = String(rawAmount);
     const { currency, rate } = detectCurrency(rawAmountStr);
@@ -136,29 +147,22 @@ const importCSV = async (req, res) => {
       issues.push({ type: 'invalid_amount', desc: `Cannot parse amount: "${rawAmount}"`, severity: 'error' });
     }
 
-    // 4. Negative amount
     if (amount !== null && amount < 0) {
       issues.push({ type: 'negative_amount', desc: `Negative amount ${amount} — treated as refund (skipped)`, severity: 'warning' });
     }
 
-    // 5. Settlement logged as expense
     const desc_lower = description.toLowerCase();
     const isSettlement = desc_lower.includes('settlement') || desc_lower.includes('settle up') || desc_lower.includes('paid back');
     if (isSettlement) {
       issues.push({ type: 'settlement_as_expense', desc: 'This looks like a settlement, not an expense', severity: 'warning' });
     }
 
-    // 6. Missing payer
-    const rawPaidBy = row.paid_by || row.paidBy || row.PaidBy || row['Paid By'] || '';
-    if (!rawPaidBy.trim()) issues.push({ type: 'missing_payer', desc: 'No payer specified', severity: 'error' });
+    const rawPaidBy = getPaidBy(row);
+    if (!rawPaidBy) issues.push({ type: 'missing_payer', desc: 'No payer specified', severity: 'error' });
 
-    // 7. Members who left still in expense
     if (date) {
-      const memberFields = ['split_with', 'members', 'participants', 'Members'];
-      let rawMembers = '';
-      for (const f of memberFields) if (row[f]) { rawMembers = row[f]; break; }
+      const rawMembers = getMemberName(row);
       const memberNames = rawMembers ? rawMembers.split(/[,;|]/).map(s => s.trim()).filter(Boolean) : [];
-      
       for (const name of memberNames) {
         const key = normalizeName(name);
         const known = KNOWN_MEMBERS[key];
@@ -171,7 +175,6 @@ const importCSV = async (req, res) => {
       }
     }
 
-    // 8. Duplicate detection
     if (description && date && amount) {
       const dupKey = `${description.toLowerCase()}|${date.toISOString().slice(0,10)}|${amount}`;
       if (seen.has(dupKey)) {
@@ -181,19 +184,16 @@ const importCSV = async (req, res) => {
       }
     }
 
-    // 9. Currency mismatch (USD in INR context)
     if (currency === 'USD') {
       issues.push({ type: 'currency_usd', desc: `Amount in USD — converting at rate 1 USD = ₹${USD_TO_INR}`, severity: 'info' });
     }
 
-    // 10. Split type detection
     const rawSplitType = (row.split_type || row.splitType || row['Split Type'] || 'equal').trim().toLowerCase();
     const validSplitTypes = ['equal', 'exact', 'percentage', 'shares', 'unequal'];
     if (rawSplitType && !validSplitTypes.includes(rawSplitType)) {
       issues.push({ type: 'unknown_split_type', desc: `Unknown split type "${rawSplitType}" — defaulting to equal`, severity: 'warning' });
     }
 
-    // Log all anomalies
     const hasError = issues.some(x => x.severity === 'error');
     const isDuplicate = issues.some(x => x.type === 'duplicate');
     const isNegative = issues.some(x => x.type === 'negative_amount');
@@ -214,15 +214,14 @@ const importCSV = async (req, res) => {
       anomalies.push(log);
     }
 
-    // Skip rows with errors, duplicates, or negative amounts
     if (hasError || isDuplicate || isNegative) continue;
 
-    // Import the expense
     try {
-      const paidByMembership = await getMembership(rawPaidBy.trim());
+      const paidByMembership = await getMembership(rawPaidBy);
+      if (!paidByMembership) continue;
+
       const amountInr = amount * rate;
 
-      // Get active members on this date for equal split
       const activeMembers = await prisma.groupMembership.findMany({
         where: {
           groupId,
@@ -230,6 +229,11 @@ const importCSV = async (req, res) => {
           OR: [{ leftAt: null }, { leftAt: { gte: date } }],
         },
       });
+
+      if (activeMembers.length === 0) {
+        anomalies.push({ rowNumber: rowNum, issueType: 'no_active_members', issueDescription: 'No active members found for this date — skipping' });
+        continue;
+      }
 
       const splitType = validSplitTypes.includes(rawSplitType) ? rawSplitType : 'equal';
       const perPerson = amountInr / activeMembers.length;

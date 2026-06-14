@@ -1,0 +1,27 @@
+description,date,amount,paid_by,split_with,split_type
+Groceries from D-Mart,2024-02-05,₹2400,Aisha,"Aisha,Rohan,Priya,Meera,Dev",equal
+February electricity bill,2024-02-10,₹1800,Rohan,"Aisha,Rohan,Priya,Meera,Dev",equal
+Netflix + Prime subscription,2024-02-15,$12,Priya,"Aisha,Rohan,Priya,Meera,Dev",equal
+Gas cylinder refill,2024-02-20,₹900,Meera,"Aisha,Rohan,Priya,Meera,Dev",equal
+February internet bill,2024-02-28,₹1200,Dev,"Aisha,Rohan,Priya,Meera,Dev",equal
+Weekend groceries,2024-03-03,₹1600,Aisha,"Aisha,Rohan,Priya,Meera,Dev",equal
+March electricity,2024-03-10,₹2100,Rohan,"Aisha,Rohan,Priya,Meera,Dev",equal
+Dinner at Barbeque Nation,2024-03-18,₹5500,Dev,"Aisha,Rohan,Priya,Meera,Dev",equal
+Meera farewell dinner,2024-03-29,₹4500,Priya,"Aisha,Rohan,Priya,Meera,Dev",equal
+March internet bill,2024-03-31,₹1200,Dev,"Aisha,Rohan,Priya,Meera,Dev",equal
+,2024-04-02,₹500,Aisha,"Aisha,Rohan,Priya,Dev",equal
+April groceries,2024-04-05,₹2200,Rohan,"Aisha,Rohan,Priya,Dev",equal
+April electricity,2024-04-12,₹1950,Priya,"Aisha,Rohan,Priya,Dev",equal
+Sam welcome lunch,2024-04-20,₹1800,Dev,"Aisha,Rohan,Priya,Dev,Sam",equal
+April internet bill,2024-04-30,₹1200,Aisha,"Aisha,Rohan,Priya,Dev,Sam",equal
+May groceries,2024-05-05,₹2600,Sam,"Aisha,Rohan,Priya,Dev,Sam",equal
+May electricity,2024-05-12,₹2000,Rohan,"Aisha,Rohan,Priya,Dev,Sam",equal
+May internet bill,2024-05-31,₹1200,Dev,"Aisha,Rohan,Priya,Dev,Sam",equal
+Rohan paid back Aisha settle up,2024-03-15,₹1500,Rohan,Aisha,equal
+Groceries from D-Mart,2024-02-05,₹2400,Aisha,"Aisha,Rohan,Priya,Meera,Dev",equal
+Bad date example,not-a-date,₹300,Dev,"Aisha,Dev",equal
+No payer expense,2024-03-20,₹400,,"Aisha,Rohan",equal
+Meera post-departure expense,2024-04-10,₹800,Aisha,"Aisha,Rohan,Priya,Meera",equal
+Sam before joining expense,2024-03-01,₹600,Aisha,"Aisha,Sam",equal
+Deposit refund,2024-04-15,-₹200,Priya,"Aisha,Priya",equal
+Roof repair split custom,2024-05-20,₹3600,Aisha,"Aisha,Rohan,Priya,Dev,Sam",custom_split

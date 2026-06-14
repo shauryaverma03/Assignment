@@ -19,14 +19,22 @@ const getGroupBalances = async (req, res) => {
 
     // net[memberId] = amount member is owed (positive) or owes (negative)
     const net = {};
-    memberships.forEach(m => (net[m.id] = 0));
+    const paid = {};
+    const owes = {};
+    memberships.forEach(m => { net[m.id] = 0; paid[m.id] = 0; owes[m.id] = 0; });
 
     expenses.forEach(exp => {
       // payer gets credit
-      if (net[exp.paidById] !== undefined) net[exp.paidById] += parseFloat(exp.amountInr);
+      if (net[exp.paidById] !== undefined) {
+        net[exp.paidById] += parseFloat(exp.amountInr);
+        paid[exp.paidById] += parseFloat(exp.amountInr);
+      }
       // each split member owes their share
       exp.splits.forEach(split => {
-        if (net[split.memberId] !== undefined) net[split.memberId] -= parseFloat(split.amountInr);
+        if (net[split.memberId] !== undefined) {
+          net[split.memberId] -= parseFloat(split.amountInr);
+          owes[split.memberId] += parseFloat(split.amountInr);
+        }
       });
     });
 
@@ -49,6 +57,8 @@ const getGroupBalances = async (req, res) => {
         displayName: m.displayName || m.user.username,
         userId: m.userId,
         net: Math.round(net[m.id] * 100) / 100,
+        paid: Math.round(paid[m.id] * 100) / 100,
+        owes: Math.round(owes[m.id] * 100) / 100,
       })),
       transactions: transactions.map(t => ({
         from: memberMap[t.from],

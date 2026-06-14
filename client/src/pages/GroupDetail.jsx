@@ -1,13 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { Plus, ArrowLeft, Upload, Check, X, Info, AlertTriangle, ArrowLeftRight, Home, Receipt, TrendingUp, Users } from 'lucide-react';
+import {
+  Plus, ArrowLeft, Upload, Check, X, Info, AlertTriangle,
+  ArrowLeftRight, Home, Receipt, TrendingUp, Users, BarChart2, IndianRupee,
+} from 'lucide-react';
 
 const TABS = ['Expenses', 'Balances', 'Settlements', 'Members', 'Import'];
 const AVATAR_COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ec4899', '#3b82f6', '#8b5cf6'];
 
-/* ── Shared input primitives ── */
+/* ── Form primitives ── */
 function FieldInput({ label, ...props }) {
   return (
     <div>
@@ -16,8 +19,7 @@ function FieldInput({ label, ...props }) {
         style={{
           width: '100%', background: 'var(--bg-subtle)', border: '1px solid var(--border)',
           borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.9rem',
-          color: 'var(--text)', outline: 'none', transition: 'border-color 0.2s ease',
-          boxSizing: 'border-box',
+          color: 'var(--text)', outline: 'none', transition: 'border-color 0.2s ease', boxSizing: 'border-box',
         }}
         onFocus={e => e.target.style.borderColor = 'var(--accent)'}
         onBlur={e => e.target.style.borderColor = 'var(--border)'}
@@ -35,8 +37,7 @@ function FieldSelect({ label, children, ...props }) {
         style={{
           width: '100%', background: 'var(--bg-subtle)', border: '1px solid var(--border)',
           borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.9rem',
-          color: 'var(--text)', outline: 'none', transition: 'border-color 0.2s ease',
-          boxSizing: 'border-box', colorScheme: 'light dark',
+          color: 'var(--text)', outline: 'none', boxSizing: 'border-box', colorScheme: 'light dark',
         }}
         onFocus={e => e.target.style.borderColor = 'var(--accent)'}
         onBlur={e => e.target.style.borderColor = 'var(--border)'}
@@ -52,16 +53,12 @@ function Modal({ onClose, title, subtitle, children }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 50, padding: '1rem',
-      background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
+      zIndex: 50, padding: '1rem', background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
     }} onClick={onClose}>
       <div style={{
-        width: '100%', maxWidth: '480px',
-        background: 'var(--card)', border: '1px solid var(--border)',
-        borderRadius: '1rem', padding: '1.5rem',
-        boxShadow: 'var(--shadow-xl)',
-        maxHeight: '90vh', overflowY: 'auto',
-        animation: 'rise 0.2s cubic-bezier(0.16,1,0.3,1)',
+        width: '100%', maxWidth: '480px', background: 'var(--card)', border: '1px solid var(--border)',
+        borderRadius: '1rem', padding: '1.5rem', boxShadow: 'var(--shadow-xl)',
+        maxHeight: '90vh', overflowY: 'auto', animation: 'rise 0.2s cubic-bezier(0.16,1,0.3,1)',
       }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
           <div>
@@ -71,8 +68,7 @@ function Modal({ onClose, title, subtitle, children }) {
           <button onClick={onClose} style={{
             width: '28px', height: '28px', borderRadius: '0.375rem', display: 'flex',
             alignItems: 'center', justifyContent: 'center', background: 'none',
-            border: 'none', color: 'var(--text-3)', cursor: 'pointer',
-            transition: 'background 0.15s ease, color 0.15s ease', flexShrink: 0,
+            border: 'none', color: 'var(--text-3)', cursor: 'pointer', flexShrink: 0,
           }}
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-muted)'; e.currentTarget.style.color = 'var(--text)'; }}
             onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-3)'; }}
@@ -86,20 +82,110 @@ function Modal({ onClose, title, subtitle, children }) {
   );
 }
 
+/* ── Mini bar chart (SVG) ── */
+function BarChart({ data, colorFn }) {
+  if (!data.length) return null;
+  const max = Math.max(...data.map(d => Math.abs(d.value)), 1);
+  const W = 100, H = 60;
+  const bw = W / data.length - 2;
+  return (
+    <div>
+      <svg viewBox={`0 0 100 ${H}`} style={{ width: '100%', height: 60 }} preserveAspectRatio="none">
+        {data.map((d, i) => {
+          const h = (Math.abs(d.value) / max) * (H - 16);
+          const x = i * (W / data.length) + 1;
+          const color = colorFn ? colorFn(d.value) : 'var(--accent)';
+          return (
+            <g key={i}>
+              <rect x={x} y={H - 14 - h} width={bw} height={h} rx="1" fill={color} opacity={0.8} />
+            </g>
+          );
+        })}
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        {data.map(d => (
+          <span key={d.label} style={{ fontSize: '0.5625rem', color: 'var(--text-3)', textAlign: 'center', flex: 1 }}>{d.label}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Horizontal balance bar ── */
+function BalanceBar({ value, max }) {
+  const pct = max > 0 ? Math.min((Math.abs(value) / max) * 100, 100) : 0;
+  const positive = value >= 0;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+      <div style={{ flex: 1, height: '6px', background: 'var(--bg-muted)', borderRadius: '9999px', overflow: 'hidden' }}>
+        <div style={{
+          height: '100%', width: `${pct}%`,
+          background: positive ? '#22c55e' : '#f87171',
+          borderRadius: '9999px',
+          transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
+          marginLeft: positive ? 0 : 'auto',
+        }} />
+      </div>
+      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: positive ? '#22c55e' : '#f87171', minWidth: '60px', textAlign: 'right' }}>
+        {positive ? '+' : ''}₹{Math.abs(value).toFixed(0)}
+      </span>
+    </div>
+  );
+}
+
+/* ── Donut / payer breakdown chart ── */
+function PayerChart({ data }) {
+  if (!data.length) return null;
+  const total = data.reduce((s, d) => s + d.value, 0);
+  if (total === 0) return null;
+
+  const R = 40, cx = 60, cy = 50;
+  let startAngle = -Math.PI / 2;
+  const slices = data.map((d, i) => {
+    const angle = (d.value / total) * 2 * Math.PI;
+    const endAngle = startAngle + angle;
+    const x1 = cx + R * Math.cos(startAngle);
+    const y1 = cy + R * Math.sin(startAngle);
+    const x2 = cx + R * Math.cos(endAngle);
+    const y2 = cy + R * Math.sin(endAngle);
+    const large = angle > Math.PI ? 1 : 0;
+    const path = `M ${cx} ${cy} L ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2} Z`;
+    const s = { path, color: AVATAR_COLORS[i % AVATAR_COLORS.length], ...d };
+    startAngle = endAngle;
+    return s;
+  });
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+      <svg viewBox="0 0 120 100" style={{ width: 100, height: 84, flexShrink: 0 }}>
+        {slices.map((s, i) => (
+          <path key={i} d={s.path} fill={s.color} opacity={0.85} stroke="var(--card)" strokeWidth="1.5" />
+        ))}
+        <circle cx={cx} cy={cy} r={24} fill="var(--card)" />
+        <text x={cx} y={cy + 5} textAnchor="middle" fontSize="8" fill="var(--text-3)" fontWeight="600">total</text>
+      </svg>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+        {slices.map((s, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-2)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.label}</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text)' }}>
+              {((s.value / total) * 100).toFixed(0)}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const modalBtnRow = { display: 'flex', gap: '0.75rem', paddingTop: '0.25rem' };
-const cancelBtnStyle = {
-  flex: 1, padding: '0.625rem', borderRadius: '0.5rem', fontSize: '0.9rem',
-  fontWeight: 500, color: 'var(--text-2)', background: 'var(--bg-subtle)',
-  border: '1px solid var(--border)', cursor: 'pointer',
-};
-const submitBtnStyle = {
-  flex: 1, padding: '0.625rem', borderRadius: '0.5rem', fontSize: '0.9rem',
-  fontWeight: 600, color: 'white', background: 'var(--accent)',
-  border: 'none', cursor: 'pointer', transition: 'opacity 0.2s ease',
-};
+const cancelBtnStyle = { flex: 1, padding: '0.625rem', borderRadius: '0.5rem', fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-2)', background: 'var(--bg-subtle)', border: '1px solid var(--border)', cursor: 'pointer' };
+const submitBtnStyle = { flex: 1, padding: '0.625rem', borderRadius: '0.5rem', fontSize: '0.9rem', fontWeight: 600, color: 'white', background: 'var(--accent)', border: 'none', cursor: 'pointer', transition: 'opacity 0.2s ease' };
 
 export default function GroupDetail() {
   const { id } = useParams();
+  const fileInputRef = useRef(null);
   const [group, setGroup] = useState(null);
   const [balances, setBalances] = useState(null);
   const [settlements, setSettlements] = useState([]);
@@ -113,7 +199,7 @@ export default function GroupDetail() {
   const [breakdownMember, setBreakdownMember] = useState(null);
 
   const [expenseForm, setExpenseForm] = useState({
-    description: '', amount: '', currency: 'INR', exchangeRate: 95.11,
+    description: '', amount: '', currency: 'INR', exchangeRate: 83.5,
     splitType: 'equal', date: new Date().toISOString().slice(0, 10), paidById: '', notes: '',
   });
   const [settleForm, setSettleForm] = useState({
@@ -144,7 +230,7 @@ export default function GroupDetail() {
       await api.post('/expenses', { ...expenseForm, groupId: id, exchangeRate: rate });
       toast.success('Expense added!');
       setShowAddExpense(false);
-      setExpenseForm({ description: '', amount: '', currency: 'INR', exchangeRate: 95.11, splitType: 'equal', date: new Date().toISOString().slice(0, 10), paidById: '', notes: '' });
+      setExpenseForm({ description: '', amount: '', currency: 'INR', exchangeRate: 83.5, splitType: 'equal', date: new Date().toISOString().slice(0, 10), paidById: '', notes: '' });
       fetchAll();
     } catch (err) { toast.error(err.response?.data?.error || 'Failed'); }
   };
@@ -166,17 +252,23 @@ export default function GroupDetail() {
   };
 
   const handleCSVUpload = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
     setUploading(true);
     const fd = new FormData();
-    fd.append('file', file); fd.append('groupId', id);
+    fd.append('file', file);
+    fd.append('groupId', id);
     try {
       const res = await api.post('/import/csv', fd);
       setImportResult(res.data);
-      toast.success(`Imported ${res.data.imported} expenses`);
+      toast.success(`Imported ${res.data.imported} of ${res.data.totalRows} rows`);
       fetchAll();
-    } catch (err) { toast.error(err.response?.data?.error || 'Import failed'); }
-    finally { setUploading(false); }
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Import failed');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const fetchBreakdown = async (member) => {
@@ -189,11 +281,7 @@ export default function GroupDetail() {
   if (!group) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{
-          width: '36px', height: '36px', border: '2px solid var(--accent)',
-          borderTopColor: 'transparent', borderRadius: '50%',
-          animation: 'spin 0.7s linear infinite', margin: '0 auto 0.75rem',
-        }} />
+        <div style={{ width: '36px', height: '36px', border: '2px solid var(--accent)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite', margin: '0 auto 0.75rem' }} />
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         <p style={{ fontSize: '0.875rem', color: 'var(--text-3)' }}>Loading...</p>
       </div>
@@ -202,6 +290,35 @@ export default function GroupDetail() {
 
   const activeMembers = group.memberships.filter(m => !m.leftAt);
   const pendingLogs = importLogs.filter(l => l.status === 'pending').length;
+
+  // ── Analytics computations ──
+  const totalSpent = group.expenses.reduce((s, e) => s + Number(e.amountInr), 0);
+
+  // Monthly breakdown (last 6 months)
+  const monthlyMap = {};
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    monthlyMap[key] = { label: d.toLocaleDateString('en-IN', { month: 'short' }), value: 0 };
+  }
+  group.expenses.forEach(e => {
+    const d = new Date(e.date);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (monthlyMap[key]) monthlyMap[key].value += Number(e.amountInr);
+  });
+  const monthlyChartData = Object.values(monthlyMap);
+
+  // Payer breakdown
+  const payerMap = {};
+  group.expenses.filter(e => !e.isSettlement).forEach(e => {
+    const name = e.paidBy?.displayName || 'Unknown';
+    payerMap[name] = (payerMap[name] || 0) + Number(e.amountInr);
+  });
+  const payerData = Object.entries(payerMap)
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
 
   const tabStyle = (t) => ({
     padding: '0.375rem 0.875rem', borderRadius: '9999px', fontSize: '0.875rem',
@@ -221,20 +338,18 @@ export default function GroupDetail() {
         display: 'flex', flexDirection: 'column', zIndex: 40,
         background: 'var(--bg-subtle)', borderRight: '1px solid var(--border)',
       }}>
-        {/* Header */}
         <div style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <Link to="/dashboard" style={{
               display: 'flex', alignItems: 'center', gap: '0.375rem',
               fontSize: '0.8125rem', color: 'var(--text-2)', textDecoration: 'none',
-              transition: 'color 0.15s ease',
             }}
               onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
               onMouseLeave={e => e.currentTarget.style.color = 'var(--text-2)'}
             >
               <ArrowLeft size={13} /> All groups
             </Link>
-            <Link to="/" style={{ color: 'var(--text-3)', transition: 'color 0.15s ease' }}
+            <Link to="/" style={{ color: 'var(--text-3)' }}
               onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
               onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
             >
@@ -259,7 +374,6 @@ export default function GroupDetail() {
           </div>
         </div>
 
-        {/* Tab nav */}
         <nav style={{ flex: 1, padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '1px' }}>
           {TABS.map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
@@ -275,16 +389,12 @@ export default function GroupDetail() {
             >
               <span>{t}</span>
               {t === 'Import' && pendingLogs > 0 && (
-                <span style={{
-                  fontSize: '0.625rem', fontWeight: 700, background: '#f59e0b', color: 'white',
-                  padding: '0.15rem 0.4rem', borderRadius: '9999px',
-                }}>{pendingLogs}</span>
+                <span style={{ fontSize: '0.625rem', fontWeight: 700, background: '#f59e0b', color: 'white', padding: '0.15rem 0.4rem', borderRadius: '9999px' }}>{pendingLogs}</span>
               )}
             </button>
           ))}
         </nav>
 
-        {/* Actions */}
         <div style={{ padding: '0.75rem', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <button onClick={() => setShowAddExpense(true)} style={{
             width: '100%', background: 'var(--accent)', color: 'white',
@@ -303,7 +413,6 @@ export default function GroupDetail() {
             border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.5rem',
             fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-2)', cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
-            transition: 'color 0.15s ease, border-color 0.15s ease',
           }}
             onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
             onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-2)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
@@ -315,7 +424,6 @@ export default function GroupDetail() {
 
       {/* ── MAIN ── */}
       <main style={{ marginLeft: '256px', flex: 1, padding: '2rem 2.5rem' }}>
-        {/* Group header */}
         <div style={{ marginBottom: '1.75rem' }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)', marginBottom: '0.25rem' }}>
             {group.name}
@@ -333,10 +441,7 @@ export default function GroupDetail() {
             <button key={t} onClick={() => setTab(t)} style={tabStyle(t)}>
               {t}
               {t === 'Import' && pendingLogs > 0 && (
-                <span style={{
-                  position: 'absolute', top: '-2px', right: '-2px',
-                  width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b',
-                }} />
+                <span style={{ position: 'absolute', top: '-2px', right: '-2px', width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }} />
               )}
             </button>
           ))}
@@ -344,86 +449,168 @@ export default function GroupDetail() {
 
         {/* ── EXPENSES TAB ── */}
         {tab === 'Expenses' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {group.expenses.length === 0 ? (
-              <EmptyState icon={<Receipt size={22} style={{ color: 'var(--accent)' }} />} title="No expenses yet" desc="Add your first expense or import a CSV file">
-                <button onClick={() => setShowAddExpense(true)} style={{ ...submitBtnStyle, flex: 'none', padding: '0.5rem 1.25rem' }}>
-                  Add Expense
-                </button>
-                <button onClick={() => setTab('Import')} style={{ ...cancelBtnStyle, flex: 'none', padding: '0.5rem 1.25rem' }}>
-                  Import CSV
-                </button>
-              </EmptyState>
-            ) : group.expenses.map((exp) => (
-              <div key={exp.id} className="expense-row" style={{
-                background: 'var(--card)', border: '1px solid var(--border)',
-                borderRadius: '0.75rem', padding: '1rem',
-                boxShadow: 'var(--shadow)',
-                transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; e.currentTarget.querySelector('.del-btn').style.opacity = '1'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; e.currentTarget.querySelector('.del-btn').style.opacity = '0'; }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', flex: 1, minWidth: 0 }}>
-                    <div style={{
-                      width: '38px', height: '38px', borderRadius: '0.625rem', flexShrink: 0,
-                      background: 'var(--bg-muted)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      <Receipt size={16} style={{ color: 'var(--text-3)' }} />
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
-                        <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)' }}>{exp.description}</span>
-                        {exp.isSettlement && <Badge color="#22c55e" bg="rgba(34,197,94,0.1)">Settlement</Badge>}
-                        <Badge color="var(--accent)" bg="var(--accent-subtle)">{exp.splitType}</Badge>
-                        {exp.currency !== 'INR' && <Badge color="#f59e0b" bg="rgba(245,158,11,0.1)">USD</Badge>}
-                      </div>
-                      <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)' }}>
-                        Paid by <span style={{ color: 'var(--accent)', fontWeight: 500 }}>{exp.paidBy?.displayName || 'Unknown'}</span>
-                        <span style={{ margin: '0 0.375rem', color: 'var(--border-strong)' }}>·</span>
-                        {new Date(exp.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.5rem' }}>
-                        {exp.splits.map(s => (
-                          <span key={s.id} style={{
-                            fontSize: '0.6875rem', padding: '0.2rem 0.5rem', borderRadius: '0.375rem',
-                            background: 'var(--bg-muted)', color: 'var(--text-3)',
-                            border: '1px solid var(--border)',
-                          }}>
-                            {s.member?.displayName || '?'}: ₹{Number(s.amountInr).toFixed(0)}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', flexShrink: 0, marginLeft: '1rem' }}>
-                    <div style={{ textAlign: 'right' }}>
-                      <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text)' }}>₹{Number(exp.amountInr).toFixed(2)}</p>
-                      {exp.currency !== 'INR' && <p style={{ fontSize: '0.6875rem', color: 'var(--text-3)' }}>${Number(exp.amount).toFixed(2)}</p>}
-                    </div>
-                    <button className="del-btn" onClick={() => deleteExpense(exp.id)} style={{
-                      opacity: 0, padding: '0.25rem', background: 'none', border: 'none',
-                      color: 'var(--text-3)', cursor: 'pointer', transition: 'color 0.15s ease, opacity 0.15s ease',
-                      borderRadius: '0.375rem',
-                    }}
-                      onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
-                      onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
-                    >
-                      <X size={14} />
-                    </button>
-                  </div>
+          <div>
+            {/* Analytics bar */}
+            {group.expenses.length > 0 && (
+              <div style={{
+                display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem',
+              }}>
+                <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem', boxShadow: 'var(--shadow)' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginBottom: '0.25rem' }}>Total Spent</p>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>
+                    ₹{totalSpent.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                  </p>
+                </div>
+                <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem', boxShadow: 'var(--shadow)' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginBottom: '0.25rem' }}>Expenses</p>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>{group.expenses.length}</p>
+                </div>
+                <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem', boxShadow: 'var(--shadow)' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginBottom: '0.25rem' }}>Avg per Expense</p>
+                  <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>
+                    ₹{(totalSpent / group.expenses.length).toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+                  </p>
                 </div>
               </div>
-            ))}
+            )}
+
+            {/* Monthly chart + Payer chart */}
+            {group.expenses.length > 0 && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem', boxShadow: 'var(--shadow)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.75rem' }}>
+                    <BarChart2 size={13} style={{ color: 'var(--accent)' }} />
+                    <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)' }}>Monthly Spending</span>
+                  </div>
+                  <BarChart
+                    data={monthlyChartData}
+                    colorFn={() => 'var(--accent)'}
+                  />
+                </div>
+                <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem', boxShadow: 'var(--shadow)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.75rem' }}>
+                    <IndianRupee size={13} style={{ color: 'var(--accent)' }} />
+                    <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--text)' }}>Top Payers</span>
+                  </div>
+                  <PayerChart data={payerData} />
+                </div>
+              </div>
+            )}
+
+            {/* Expense list */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {group.expenses.length === 0 ? (
+                <EmptyState icon={<Receipt size={22} style={{ color: 'var(--accent)' }} />} title="No expenses yet" desc="Add your first expense or import a CSV file">
+                  <button onClick={() => setShowAddExpense(true)} style={{ ...submitBtnStyle, flex: 'none', padding: '0.5rem 1.25rem' }}>Add Expense</button>
+                  <button onClick={() => setTab('Import')} style={{ ...cancelBtnStyle, flex: 'none', padding: '0.5rem 1.25rem' }}>Import CSV</button>
+                </EmptyState>
+              ) : group.expenses.map((exp) => (
+                <div key={exp.id} className="expense-row" style={{
+                  background: 'var(--card)', border: '1px solid var(--border)',
+                  borderRadius: '0.75rem', padding: '1rem', boxShadow: 'var(--shadow)',
+                  transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; e.currentTarget.querySelector('.del-btn').style.opacity = '1'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; e.currentTarget.querySelector('.del-btn').style.opacity = '0'; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        width: '38px', height: '38px', borderRadius: '0.625rem', flexShrink: 0,
+                        background: 'var(--bg-muted)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Receipt size={16} style={{ color: 'var(--text-3)' }} />
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
+                          <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)' }}>{exp.description}</span>
+                          {exp.isSettlement && <Badge color="#22c55e" bg="rgba(34,197,94,0.1)">Settlement</Badge>}
+                          <Badge color="var(--accent)" bg="var(--accent-subtle)">{exp.splitType}</Badge>
+                          {exp.currency !== 'INR' && <Badge color="#f59e0b" bg="rgba(245,158,11,0.1)">USD</Badge>}
+                        </div>
+                        <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)' }}>
+                          Paid by <span style={{ color: 'var(--accent)', fontWeight: 500 }}>{exp.paidBy?.displayName || 'Unknown'}</span>
+                          <span style={{ margin: '0 0.375rem', color: 'var(--border-strong)' }}>·</span>
+                          {new Date(exp.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.5rem' }}>
+                          {exp.splits.map(s => (
+                            <span key={s.id} style={{
+                              fontSize: '0.6875rem', padding: '0.2rem 0.5rem', borderRadius: '0.375rem',
+                              background: 'var(--bg-muted)', color: 'var(--text-3)', border: '1px solid var(--border)',
+                            }}>
+                              {s.member?.displayName || '?'}: ₹{Number(s.amountInr).toFixed(0)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', flexShrink: 0, marginLeft: '1rem' }}>
+                      <div style={{ textAlign: 'right' }}>
+                        <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text)' }}>₹{Number(exp.amountInr).toFixed(2)}</p>
+                        {exp.currency !== 'INR' && <p style={{ fontSize: '0.6875rem', color: 'var(--text-3)' }}>${Number(exp.amount).toFixed(2)}</p>}
+                      </div>
+                      <button className="del-btn" onClick={() => deleteExpense(exp.id)} style={{
+                        opacity: 0, padding: '0.25rem', background: 'none', border: 'none',
+                        color: 'var(--text-3)', cursor: 'pointer', transition: 'color 0.15s ease, opacity 0.15s ease', borderRadius: '0.375rem',
+                      }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
         {/* ── BALANCES TAB ── */}
         {tab === 'Balances' && balances && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
+
+            {/* Balance overview chart */}
+            {balances.members.length > 0 && (
+              <div style={{
+                background: 'var(--card)', border: '1px solid var(--border)',
+                borderRadius: '0.875rem', padding: '1.25rem', boxShadow: 'var(--shadow)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                  <BarChart2 size={14} style={{ color: 'var(--accent)' }} />
+                  <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)' }}>Balance Overview</h3>
+                  <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                    +green = gets back · red = owes
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {(() => {
+                    const maxAbs = Math.max(...balances.members.map(m => Math.abs(m.net)), 1);
+                    return balances.members.map((m, i) => (
+                      <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+                        <div style={{
+                          width: '30px', height: '30px', borderRadius: '50%', flexShrink: 0,
+                          background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: 'white', fontSize: '0.75rem', fontWeight: 700,
+                        }}>
+                          {(m.displayName || '?')[0].toUpperCase()}
+                        </div>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-2)', minWidth: '60px' }}>{m.displayName}</span>
+                        <div style={{ flex: 1 }}>
+                          <BalanceBar value={m.net} max={maxAbs} />
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            )}
+
+            {/* Member cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.75rem' }}>
               {balances.members.map((m, i) => (
                 <div key={m.id} onClick={() => fetchBreakdown(m)} style={{
                   background: 'var(--card)', border: '1px solid var(--border)',
@@ -443,17 +630,22 @@ export default function GroupDetail() {
                     }}>
                       {(m.displayName || '?')[0].toUpperCase()}
                     </div>
-                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text)' }}>{m.displayName}</span>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text)' }}>{m.displayName}</span>
                   </div>
                   <div style={{
                     fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.2rem',
                     color: m.net > 0 ? '#22c55e' : m.net < 0 ? '#f87171' : 'var(--text-3)',
                   }}>
-                    {m.net > 0 ? '+' : ''}₹{Math.abs(m.net).toFixed(2)}
+                    {m.net > 0 ? '+' : ''}₹{Math.abs(m.net).toFixed(0)}
                   </div>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginBottom: '0.375rem' }}>
                     {m.net > 0 ? 'gets back' : m.net < 0 ? 'owes' : 'settled'}
                   </p>
+                  <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.6875rem', color: 'var(--text-3)' }}>
+                    <span>Paid ₹{m.paid?.toFixed(0) || 0}</span>
+                    <span style={{ color: 'var(--border-strong)' }}>·</span>
+                    <span>Owes ₹{m.owes?.toFixed(0) || 0}</span>
+                  </div>
                   <p style={{ fontSize: '0.6875rem', color: 'var(--accent)', marginTop: '0.5rem', opacity: 0.7 }}>
                     Tap for breakdown →
                   </p>
@@ -461,10 +653,8 @@ export default function GroupDetail() {
               ))}
             </div>
 
-            <div style={{
-              background: 'var(--card)', border: '1px solid var(--border)',
-              borderRadius: '0.875rem', padding: '1.25rem', boxShadow: 'var(--shadow)',
-            }}>
+            {/* Suggested settlements */}
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.875rem', padding: '1.25rem', boxShadow: 'var(--shadow)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                 <TrendingUp size={15} style={{ color: 'var(--accent)' }} />
                 <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)' }}>Suggested Settlements</h3>
@@ -477,7 +667,7 @@ export default function GroupDetail() {
               ) : balances.transactions.map((t, i) => (
                 <div key={i} style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '0.75rem 0', borderBottom: '1px solid var(--border)',
+                  padding: '0.75rem 0', borderBottom: i < balances.transactions.length - 1 ? '1px solid var(--border)' : 'none',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                     <div style={{
@@ -494,7 +684,19 @@ export default function GroupDetail() {
                       <span style={{ fontWeight: 600, color: '#22c55e' }}>{t.to?.displayName}</span>
                     </span>
                   </div>
-                  <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.9375rem' }}>₹{t.amount.toFixed(2)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.9375rem' }}>₹{t.amount.toFixed(2)}</span>
+                    <button onClick={() => {
+                      setSettleForm({ paidById: t.from?.id?.toString() || '', paidToId: t.to?.id?.toString() || '', amount: t.amount.toFixed(2), date: new Date().toISOString().slice(0, 10), notes: '' });
+                      setShowSettle(true);
+                    }} style={{
+                      fontSize: '0.75rem', padding: '0.25rem 0.625rem', borderRadius: '0.375rem',
+                      background: 'var(--accent-subtle)', color: 'var(--accent)',
+                      border: '1px solid var(--accent)', cursor: 'pointer', fontWeight: 500,
+                    }}>
+                      Record
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -504,16 +706,10 @@ export default function GroupDetail() {
               <Modal title={`Breakdown · ${breakdownMember.displayName}`} onClose={() => setBreakdown(null)}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {breakdown.map(item => (
-                    <div key={item.expenseId} style={{
-                      padding: '0.875rem', borderRadius: '0.625rem',
-                      background: 'var(--bg-subtle)', border: '1px solid var(--border)',
-                    }}>
+                    <div key={item.expenseId} style={{ padding: '0.875rem', borderRadius: '0.625rem', background: 'var(--bg-subtle)', border: '1px solid var(--border)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
                         <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text)' }}>{item.description}</span>
-                        <span style={{
-                          fontSize: '0.9rem', fontWeight: 700,
-                          color: item.net > 0 ? '#22c55e' : item.net < 0 ? '#f87171' : 'var(--text-3)',
-                        }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: item.net > 0 ? '#22c55e' : item.net < 0 ? '#f87171' : 'var(--text-3)' }}>
                           {item.net > 0 ? '+' : ''}₹{item.net.toFixed(2)}
                         </span>
                       </div>
@@ -535,13 +731,12 @@ export default function GroupDetail() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-3)' }}>
-                {settlements.length} settlement{settlements.length !== 1 ? 's' : ''}
+                {settlements.length} settlement{settlements.length !== 1 ? 's' : ''} recorded
               </p>
               <button onClick={() => setShowSettle(true)} style={{
                 display: 'flex', alignItems: 'center', gap: '0.375rem',
                 fontSize: '0.875rem', fontWeight: 500, color: 'var(--accent)',
                 background: 'none', border: 'none', cursor: 'pointer',
-                transition: 'opacity 0.2s ease',
               }}
                 onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
                 onMouseLeave={e => e.currentTarget.style.opacity = '1'}
@@ -591,67 +786,88 @@ export default function GroupDetail() {
 
         {/* ── MEMBERS TAB ── */}
         {tab === 'Members' && (
-          <div style={{
-            background: 'var(--card)', border: '1px solid var(--border)',
-            borderRadius: '0.875rem', boxShadow: 'var(--shadow)', overflow: 'hidden',
-          }}>
-            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)' }}>
-              <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Users size={15} style={{ color: 'var(--accent)' }} /> Group Members
-              </h3>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: '0.25rem' }}>
-                Join and leave dates determine which expenses each member shares
-              </p>
-            </div>
-            <div>
-              {group.memberships.map((m, i) => (
-                <div key={m.id} style={{
-                  padding: '0.875rem 1.25rem',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  borderBottom: i < group.memberships.length - 1 ? '1px solid var(--border)' : 'none',
-                  transition: 'background 0.15s ease',
-                }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-subtle)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                    <div style={{
-                      width: '34px', height: '34px', borderRadius: '50%',
-                      background: AVATAR_COLORS[i % AVATAR_COLORS.length],
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: 'white', fontSize: '0.875rem', fontWeight: 700,
-                    }}>
-                      {(m.displayName || m.user?.username || '?')[0].toUpperCase()}
-                    </div>
-                    <div>
-                      <p style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text)' }}>
-                        {m.displayName || m.user?.username}
-                      </p>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>@{m.user?.username}</p>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-3)' }}>
-                    <span>Joined {new Date(m.joinedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                    {m.leftAt ? (
-                      <span style={{
-                        background: 'rgba(245,158,11,0.1)', color: '#f59e0b',
-                        border: '1px solid rgba(245,158,11,0.2)', padding: '0.2rem 0.625rem',
-                        borderRadius: '9999px', fontWeight: 500,
-                      }}>
-                        Left {new Date(m.leftAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                      </span>
-                    ) : (
-                      <span style={{
-                        background: 'rgba(34,197,94,0.1)', color: '#22c55e',
-                        border: '1px solid rgba(34,197,94,0.2)', padding: '0.2rem 0.625rem',
-                        borderRadius: '9999px', fontWeight: 500,
-                      }}>
-                        Active
-                      </span>
-                    )}
-                  </div>
+          <div>
+            {/* Member stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              {[
+                { label: 'Total Members', value: group.memberships.length, color: '#6366f1' },
+                { label: 'Active', value: group.memberships.filter(m => !m.leftAt).length, color: '#22c55e' },
+                { label: 'Former', value: group.memberships.filter(m => m.leftAt).length, color: '#f59e0b' },
+              ].map(s => (
+                <div key={s.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem', textAlign: 'center', boxShadow: 'var(--shadow)' }}>
+                  <p style={{ fontSize: '1.75rem', fontWeight: 700, color: s.color, marginBottom: '0.25rem' }}>{s.value}</p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{s.label}</p>
                 </div>
               ))}
+            </div>
+
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.875rem', boxShadow: 'var(--shadow)', overflow: 'hidden' }}>
+              <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)' }}>
+                <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Users size={15} style={{ color: 'var(--accent)' }} /> Group Members
+                </h3>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: '0.25rem' }}>
+                  Join and leave dates determine which expenses each member shares
+                </p>
+              </div>
+              <div>
+                {group.memberships.map((m, i) => {
+                  const memberTotal = group.expenses.reduce((s, e) => {
+                    const split = e.splits.find(sp => sp.member?.id === m.id);
+                    return s + (split ? Number(split.amountInr) : 0);
+                  }, 0);
+                  const paidTotal = group.expenses.filter(e => e.paidBy?.id === m.id).reduce((s, e) => s + Number(e.amountInr), 0);
+                  return (
+                    <div key={m.id} style={{
+                      padding: '0.875rem 1.25rem',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      borderBottom: i < group.memberships.length - 1 ? '1px solid var(--border)' : 'none',
+                      transition: 'background 0.15s ease',
+                    }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-subtle)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{
+                          width: '36px', height: '36px', borderRadius: '50%',
+                          background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: 'white', fontSize: '0.875rem', fontWeight: 700,
+                        }}>
+                          {(m.displayName || m.user?.username || '?')[0].toUpperCase()}
+                        </div>
+                        <div>
+                          <p style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text)' }}>
+                            {m.displayName || m.user?.username}
+                          </p>
+                          <p style={{ fontSize: '0.6875rem', color: 'var(--text-3)' }}>
+                            @{m.user?.username} · Joined {new Date(m.joinedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </p>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                        <div style={{ textAlign: 'right' }}>
+                          <p style={{ fontSize: '0.6875rem', color: 'var(--text-3)' }}>Paid</p>
+                          <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#22c55e' }}>₹{paidTotal.toFixed(0)}</p>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <p style={{ fontSize: '0.6875rem', color: 'var(--text-3)' }}>Share</p>
+                          <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text)' }}>₹{memberTotal.toFixed(0)}</p>
+                        </div>
+                        {m.leftAt ? (
+                          <span style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)', padding: '0.2rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500 }}>
+                            Left {new Date(m.leftAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                          </span>
+                        ) : (
+                          <span style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)', padding: '0.2rem 0.625rem', borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 500 }}>
+                            Active
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
@@ -659,6 +875,7 @@ export default function GroupDetail() {
         {/* ── IMPORT TAB ── */}
         {tab === 'Import' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Upload area */}
             <div style={{
               background: 'var(--card)', border: '2px dashed var(--border)',
               borderRadius: '0.875rem', padding: '3rem 2rem', textAlign: 'center',
@@ -673,8 +890,11 @@ export default function GroupDetail() {
                 <Upload size={20} style={{ color: 'var(--accent)' }} />
               </div>
               <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.375rem' }}>Import CSV File</h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-2)', marginBottom: '1.5rem' }}>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-2)', marginBottom: '0.5rem' }}>
                 Upload <strong>expenses_export.csv</strong> — anomalies detected automatically
+              </p>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginBottom: '1.5rem' }}>
+                Supports columns: <code style={{ background: 'var(--bg-muted)', padding: '0.1rem 0.3rem', borderRadius: '0.25rem' }}>description, date, amount, paid_by, split_with, split_type</code>
               </p>
               <label style={{
                 display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
@@ -688,26 +908,29 @@ export default function GroupDetail() {
               >
                 <Upload size={14} />
                 {uploading ? 'Importing...' : 'Choose CSV File'}
-                <input type="file" accept=".csv" onChange={handleCSVUpload} style={{ display: 'none' }} disabled={uploading} />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleCSVUpload}
+                  style={{ display: 'none' }}
+                  disabled={uploading}
+                />
               </label>
             </div>
 
+            {/* Import result */}
             {importResult && (
-              <div style={{
-                background: 'var(--card)', border: '1px solid var(--border)',
-                borderRadius: '0.875rem', padding: '1.25rem', boxShadow: 'var(--shadow)',
-              }}>
+              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.875rem', padding: '1.25rem', boxShadow: 'var(--shadow)' }}>
                 <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)', marginBottom: '1rem' }}>Import Report</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
                   {[
+                    [importResult.totalRows, 'Total Rows', '#6366f1', 'rgba(99,102,241,0.1)', 'rgba(99,102,241,0.2)'],
                     [importResult.imported, 'Imported', '#22c55e', 'rgba(34,197,94,0.1)', 'rgba(34,197,94,0.2)'],
                     [importResult.skipped, 'Skipped', '#f87171', 'rgba(248,113,113,0.1)', 'rgba(248,113,113,0.2)'],
                     [importResult.anomalies, 'Anomalies', '#f59e0b', 'rgba(245,158,11,0.1)', 'rgba(245,158,11,0.2)'],
                   ].map(([val, label, color, bg, border]) => (
-                    <div key={label} style={{
-                      textAlign: 'center', borderRadius: '0.625rem',
-                      padding: '1rem', background: bg, border: `1px solid ${border}`,
-                    }}>
+                    <div key={label} style={{ textAlign: 'center', borderRadius: '0.625rem', padding: '1rem', background: bg, border: `1px solid ${border}` }}>
                       <div style={{ fontSize: '2rem', fontWeight: 700, color }}>{val}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: '0.25rem' }}>{label}</div>
                     </div>
@@ -716,24 +939,26 @@ export default function GroupDetail() {
               </div>
             )}
 
+            {/* Anomaly log */}
             {importLogs.length > 0 && (
-              <div style={{
-                background: 'var(--card)', border: '1px solid var(--border)',
-                borderRadius: '0.875rem', overflow: 'hidden', boxShadow: 'var(--shadow)',
-              }}>
-                <div style={{
-                  padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--border)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                }}>
+              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '0.875rem', overflow: 'hidden', boxShadow: 'var(--shadow)' }}>
+                <div style={{ padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)' }}>Anomaly Log</h3>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{importLogs.length} issues</span>
+                  <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem' }}>
+                    <span style={{ color: '#f87171' }}>{importLogs.filter(l => l.severity === 'error').length} errors</span>
+                    <span style={{ color: 'var(--text-3)' }}>·</span>
+                    <span style={{ color: '#f59e0b' }}>{importLogs.filter(l => l.severity === 'warning').length} warnings</span>
+                    <span style={{ color: 'var(--text-3)' }}>·</span>
+                    <span style={{ color: '#60a5fa' }}>{importLogs.filter(l => l.severity === 'info').length} info</span>
+                  </div>
                 </div>
-                <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
+                <div style={{ maxHeight: '420px', overflowY: 'auto' }}>
                   {importLogs.map((log, i) => (
                     <div key={log.id} style={{
                       padding: '0.75rem 1.25rem',
                       display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
                       borderBottom: i < importLogs.length - 1 ? '1px solid var(--border)' : 'none',
+                      background: log.severity === 'error' ? 'rgba(248,113,113,0.04)' : 'transparent',
                     }}>
                       <div style={{ marginTop: '2px', flexShrink: 0 }}>
                         {log.severity === 'error' ? <X size={13} style={{ color: '#f87171' }} /> :
@@ -751,6 +976,12 @@ export default function GroupDetail() {
                             background: log.severity === 'error' ? 'rgba(248,113,113,0.1)' : log.severity === 'warning' ? 'rgba(245,158,11,0.1)' : 'rgba(96,165,250,0.1)',
                             color: log.severity === 'error' ? '#f87171' : log.severity === 'warning' ? '#f59e0b' : '#60a5fa',
                           }}>{log.severity}</span>
+                          <span style={{
+                            fontSize: '0.625rem', padding: '0.15rem 0.4rem', borderRadius: '9999px',
+                            fontWeight: 500,
+                            background: log.status === 'rejected' ? 'rgba(248,113,113,0.1)' : log.status === 'auto_handled' ? 'rgba(34,197,94,0.1)' : 'rgba(245,158,11,0.1)',
+                            color: log.status === 'rejected' ? '#f87171' : log.status === 'auto_handled' ? '#22c55e' : '#f59e0b',
+                          }}>{log.status.replace(/_/g, ' ')}</span>
                         </div>
                         <p style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{log.issueDescription}</p>
                         {log.actionTaken && <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', fontStyle: 'italic', marginTop: '0.15rem' }}>→ {log.actionTaken}</p>}
@@ -780,10 +1011,7 @@ export default function GroupDetail() {
               </FieldSelect>
             </div>
             {expenseForm.currency === 'USD' && expenseForm.amount && (
-              <div style={{
-                borderRadius: '0.5rem', padding: '0.625rem 0.875rem', fontSize: '0.875rem',
-                background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', color: '#f59e0b',
-              }}>
+              <div style={{ borderRadius: '0.5rem', padding: '0.625rem 0.875rem', fontSize: '0.875rem', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', color: '#f59e0b' }}>
                 ${expenseForm.amount} × ₹{expenseForm.exchangeRate} = <strong>₹{(parseFloat(expenseForm.amount || 0) * expenseForm.exchangeRate).toFixed(2)}</strong>
               </div>
             )}
@@ -854,28 +1082,19 @@ export default function GroupDetail() {
   );
 }
 
-/* ── Small helpers ── */
+/* ── Helpers ── */
 function Badge({ color, bg, children }) {
   return (
-    <span style={{
-      fontSize: '0.6875rem', padding: '0.15rem 0.5rem', borderRadius: '9999px',
-      color, background: bg, fontWeight: 500,
-    }}>{children}</span>
+    <span style={{ fontSize: '0.6875rem', padding: '0.15rem 0.5rem', borderRadius: '9999px', color, background: bg, fontWeight: 500 }}>
+      {children}
+    </span>
   );
 }
 
 function EmptyState({ icon, title, desc, children }) {
   return (
-    <div style={{
-      borderRadius: '0.875rem', padding: '3.5rem 2rem', textAlign: 'center',
-      background: 'var(--bg-subtle)', border: '2px dashed var(--border)',
-    }}>
-      <div style={{
-        width: '48px', height: '48px', borderRadius: '0.75rem',
-        background: 'var(--bg-muted)', border: '1px solid var(--border)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        margin: '0 auto 0.875rem',
-      }}>
+    <div style={{ borderRadius: '0.875rem', padding: '3.5rem 2rem', textAlign: 'center', background: 'var(--bg-subtle)', border: '2px dashed var(--border)' }}>
+      <div style={{ width: '48px', height: '48px', borderRadius: '0.75rem', background: 'var(--bg-muted)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.875rem' }}>
         {icon}
       </div>
       <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.375rem' }}>{title}</h3>

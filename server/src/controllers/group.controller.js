@@ -33,6 +33,9 @@ const getGroups = async (req, res) => {
       include: {
         memberships: { include: { user: { select: { id: true, username: true, email: true } } } },
         _count: { select: { expenses: true } },
+        expenses: {
+          select: { amountInr: true, date: true, currency: true, paidById: true },
+        },
       },
     });
     res.json(groups);

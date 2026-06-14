@@ -1,51 +1,52 @@
-import { useState } from 'react';
-import { Palette, Check, X } from 'lucide-react';
-import { useTheme, THEMES } from '../context/ThemeContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function ThemeSwitcher() {
-  const { theme, setTheme } = useTheme();
-  const [open, setOpen] = useState(false);
+  const { mode, toggleMode } = useTheme();
 
   return (
-    <div className="fixed bottom-5 right-5 z-50">
-      {open && (
-        <div className="absolute bottom-16 right-0 w-72 bg-white rounded-2xl shadow-2xl border border-zinc-100 overflow-hidden animate-[rise_.2s_cubic-bezier(0.16,1,0.3,1)]">
-          <div className="flex items-center gap-3 px-4 py-4 border-b border-zinc-100">
-            <div className="w-9 h-9 rounded-xl bg-accent-grad flex items-center justify-center">
-              <Palette size={17} className="text-white" />
-            </div>
-            <div>
-              <p className="font-semibold text-zinc-900 text-sm leading-tight">Choose Theme</p>
-              <p className="text-xs text-zinc-400">Customize your experience</p>
-            </div>
-          </div>
-          <div className="p-2 max-h-80 overflow-y-auto">
-            {THEMES.map(t => {
-              const active = theme === t.id;
-              return (
-                <button key={t.id} onClick={() => setTheme(t.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition ${active ? 'bg-zinc-50' : 'hover:bg-zinc-50'}`}>
-                  <span className="w-9 h-9 rounded-full flex-shrink-0 shadow-inner" style={{ background: t.grad }}></span>
-                  <div className="text-left flex-1 min-w-0">
-                    <p className="text-sm font-medium text-zinc-800">{t.name}</p>
-                    <p className="text-xs text-zinc-400">{active ? 'Current theme' : t.desc}</p>
-                  </div>
-                  {active && (
-                    <span className="w-5 h-5 rounded-full bg-accent-grad flex items-center justify-center flex-shrink-0">
-                      <Check size={12} className="text-white" />
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+    <button
+      onClick={toggleMode}
+      title={mode === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      style={{
+        position: 'fixed',
+        bottom: '1.25rem',
+        right: '1.25rem',
+        zIndex: 50,
+        width: '2.75rem',
+        height: '2.75rem',
+        borderRadius: '50%',
+        background: 'var(--card)',
+        border: '1px solid var(--border)',
+        boxShadow: 'var(--shadow-lg)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        color: 'var(--text-2)',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'scale(1.08)';
+        e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+        e.currentTarget.style.color = 'var(--text)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.color = 'var(--text-2)';
+      }}
+    >
+      {mode === 'dark' ? (
+        /* Sun icon */
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
+      ) : (
+        /* Moon icon */
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
       )}
-      <button onClick={() => setOpen(o => !o)}
-        className="w-12 h-12 rounded-full bg-accent-grad shadow-accent-glow flex items-center justify-center hover:scale-105 active:scale-95 transition"
-        title="Change color theme">
-        {open ? <X size={20} className="text-white" /> : <Palette size={20} className="text-white" />}
-      </button>
-    </div>
+    </button>
   );
 }

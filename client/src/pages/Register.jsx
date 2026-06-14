@@ -25,62 +25,128 @@ export default function Register() {
     } finally { setLoading(false); }
   };
 
-  const inputCls = "w-full border border-zinc-200 rounded-xl px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent";
+  const inputStyle = {
+    width: '100%', background: 'var(--bg-subtle)', border: '1px solid var(--border)',
+    borderRadius: '0.625rem', padding: '0.75rem 0.875rem', fontSize: '0.9375rem',
+    color: 'var(--text)', outline: 'none', transition: 'border-color 0.2s ease',
+    boxSizing: 'border-box',
+  };
 
   return (
-    <div className="min-h-screen flex">
-      {/* LEFT — form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 bg-white">
-        <div className="max-w-sm w-full mx-auto">
-          <Link to="/"><Logo size="lg" /></Link>
-          <p className="text-xs font-semibold tracking-[0.2em] text-zinc-400 mt-12 mb-3">GET STARTED</p>
-          <h1 className="text-3xl font-bold text-zinc-900 mb-2">Create your account</h1>
-          <p className="text-zinc-500 mb-8">Free forever. No credit card required.</p>
+    <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--bg)' }}>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1.5">Email</label>
-              <input type="email" required value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
-                className={inputCls} placeholder="you@example.com" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1.5">Username</label>
-              <input type="text" required value={form.username}
-                onChange={e => setForm({ ...form, username: e.target.value })}
-                className={inputCls} placeholder="shaurya" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1.5">Password</label>
-              <input type="password" required value={form.password}
-                onChange={e => setForm({ ...form, password: e.target.value })}
-                className={inputCls} placeholder="Min 8 characters" />
-            </div>
-            <button type="submit" disabled={loading}
-              className="w-full bg-accent hover:bg-accent-hover text-accent-fg py-3.5 rounded-xl font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2">
-              {loading ? 'Creating account...' : <>Create account <ArrowRight size={17} /></>}
+      {/* LEFT — form */}
+      <div style={{
+        width: '100%', maxWidth: '480px', display: 'flex', flexDirection: 'column',
+        justifyContent: 'center', padding: '2rem 3rem',
+        borderRight: '1px solid var(--border)',
+      }}>
+        <div style={{ maxWidth: '340px', width: '100%', margin: '0 auto' }}>
+          <Link to="/" style={{ textDecoration: 'none' }}>
+            <Logo />
+          </Link>
+
+          <div style={{ marginTop: '2.5rem', marginBottom: '2rem' }}>
+            <p style={{ fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: '0.5rem' }}>
+              GET STARTED
+            </p>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)', marginBottom: '0.375rem' }}>
+              Create your account
+            </h1>
+            <p style={{ fontSize: '0.9375rem', color: 'var(--text-2)' }}>
+              Free forever. No credit card required.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.125rem' }}>
+            {[
+              { key: 'email', label: 'Email', type: 'email', placeholder: 'you@example.com' },
+              { key: 'username', label: 'Username', type: 'text', placeholder: 'shaurya' },
+              { key: 'password', label: 'Password', type: 'password', placeholder: 'Min 8 characters' },
+            ].map(({ key, label, type, placeholder }) => (
+              <div key={key}>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-2)', marginBottom: '0.4rem' }}>
+                  {label}
+                </label>
+                <input
+                  type={type} required value={form[key]}
+                  onChange={e => setForm({ ...form, [key]: e.target.value })}
+                  placeholder={placeholder}
+                  style={inputStyle}
+                  onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                />
+              </div>
+            ))}
+
+            <button type="submit" disabled={loading} style={{
+              width: '100%', background: 'var(--accent)', color: 'white',
+              border: 'none', borderRadius: '0.625rem', padding: '0.875rem',
+              fontSize: '0.9375rem', fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.6 : 1, display: 'flex', alignItems: 'center',
+              justifyContent: 'center', gap: '0.5rem',
+              transition: 'opacity 0.2s ease',
+            }}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.88'; }}
+              onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = '1'; }}
+            >
+              {loading ? 'Creating account...' : <><span>Create account</span><ArrowRight size={17} /></>}
             </button>
           </form>
 
-          <p className="text-center text-zinc-500 text-sm mt-8">
-            Already have an account? <Link to="/login" className="text-accent font-semibold hover:underline">Sign in</Link>
+          <p style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-2)', marginTop: '1.75rem' }}>
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}
+              onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+              onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+            >
+              Sign in
+            </Link>
           </p>
         </div>
       </div>
 
-      {/* RIGHT — dark */}
-      <div className="hidden lg:flex w-1/2 relative bg-[#0a0a0a] grid-texture overflow-hidden items-center justify-center p-12">
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-accent/15 blur-[120px] rounded-full"></div>
-        <div className="relative max-w-md">
-          <h2 className="text-4xl font-bold text-white leading-tight mb-6">Start splitting<br /><span className="text-zinc-500">in 30 seconds.</span></h2>
-          <p className="text-zinc-400 mb-8">Create a group, add expenses, and see exactly who owes what — instantly.</p>
-          <ul className="space-y-4">
-            {['Equal, exact, % and share-based splits', 'USD → INR auto conversion', 'CSV import with anomaly detection', 'Min-cash-flow debt settlement'].map(f => (
-              <li key={f} className="flex items-center gap-3 text-zinc-300">
-                <span className="w-6 h-6 rounded-full bg-accent/10 border border-accent/20 text-accent flex items-center justify-center flex-shrink-0">
-                  <Check size={13} />
+      {/* RIGHT — dark panel with feature list */}
+      <div className="hidden lg:flex" style={{
+        flex: 1, position: 'relative', background: '#0a0a0a',
+        overflow: 'hidden', alignItems: 'center', justifyContent: 'center', padding: '3rem',
+      }}>
+        <div className="grid-texture" style={{ position: 'absolute', inset: 0, opacity: 0.6 }} />
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0,
+          width: '400px', height: '400px',
+          background: 'rgba(99,102,241,0.1)', borderRadius: '50%', filter: 'blur(100px)',
+          pointerEvents: 'none',
+        }} />
+
+        <div style={{ position: 'relative', maxWidth: '380px', width: '100%' }}>
+          <h2 style={{
+            fontSize: 'clamp(1.75rem, 3vw, 2.25rem)', fontWeight: 700, color: 'white',
+            lineHeight: 1.2, letterSpacing: '-0.02em', marginBottom: '1rem',
+          }}>
+            Start splitting<br />
+            <span style={{ color: '#444' }}>in 30 seconds.</span>
+          </h2>
+          <p style={{ fontSize: '0.9375rem', color: '#666', marginBottom: '2rem', lineHeight: 1.6 }}>
+            Create a group, add expenses, and see exactly who owes what — instantly.
+          </p>
+
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+            {[
+              'Equal, exact, % and share-based splits',
+              'USD → INR auto conversion',
+              'CSV import with anomaly detection',
+              'Min-cash-flow debt settlement',
+            ].map(feature => (
+              <li key={feature} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span style={{
+                  width: '22px', height: '22px', borderRadius: '50%', flexShrink: 0,
+                  background: 'rgba(129,140,248,0.12)', border: '1px solid rgba(129,140,248,0.25)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8',
+                }}>
+                  <Check size={12} />
                 </span>
-                <span className="text-sm">{f}</span>
+                <span style={{ fontSize: '0.875rem', color: '#aaa' }}>{feature}</span>
               </li>
             ))}
           </ul>

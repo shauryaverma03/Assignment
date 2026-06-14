@@ -13,8 +13,16 @@ import './index.css';
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+    <div style={{
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'var(--bg)',
+    }}>
+      <div style={{
+        width: '36px', height: '36px',
+        border: '2px solid var(--accent)', borderTopColor: 'transparent',
+        borderRadius: '50%', animation: 'spin 0.7s linear infinite',
+      }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
   return user ? children : <Navigate to="/login" />;
@@ -31,7 +39,20 @@ function AppRoutes() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/groups/:id" element={<ProtectedRoute><GroupDetail /></ProtectedRoute>} />
       </Routes>
-      <Toaster position="top-right" toastOptions={{ style: { borderRadius: '12px', fontFamily: 'inherit', fontSize: '14px' } }} />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            borderRadius: '0.75rem',
+            fontFamily: 'inherit',
+            fontSize: '0.875rem',
+            background: 'var(--card)',
+            color: 'var(--text)',
+            border: '1px solid var(--border)',
+            boxShadow: 'var(--shadow-lg)',
+          },
+        }}
+      />
       <ThemeSwitcher />
     </BrowserRouter>
   );

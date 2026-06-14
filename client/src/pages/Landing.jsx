@@ -1,68 +1,42 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, LayoutDashboard, LogOut, Zap, Shield, Globe, TrendingUp, Upload, Users } from 'lucide-react';
+import { ArrowRight, LayoutDashboard, LogOut, TrendingUp, Upload, Users, Globe, Zap, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import Logo from '../components/Logo';
 
 /* ── Scroll reveal ── */
 function Reveal({ children, delay = 0, className = '' }) {
   const ref = useRef(null);
-  const [v, setV] = useState(false);
+  const [visible, setVisible] = useState(false);
   useEffect(() => {
-    const el = ref.current; if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setV(true); obs.disconnect(); } }, { threshold: 0.12 });
-    obs.observe(el); return () => obs.disconnect();
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setVisible(true); obs.disconnect(); }
+    }, { threshold: 0.1 });
+    obs.observe(el);
+    return () => obs.disconnect();
   }, []);
   return (
     <div ref={ref} className={className} style={{
-      opacity: v ? 1 : 0,
-      transform: v ? 'translateY(0)' : 'translateY(40px)',
-      transition: `opacity .9s cubic-bezier(0.16,1,0.3,1) ${delay}s, transform .9s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
-    }}>{children}</div>
-  );
-}
-
-/* ── 3D tilt card on mouse move ── */
-function TiltCard({ children, className = '', intensity = 12 }) {
-  const ref = useRef(null);
-  const handleMove = (e) => {
-    const el = ref.current; if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    el.style.transform = `perspective(900px) rotateX(${-y * intensity}deg) rotateY(${x * intensity}deg) scale(1.02)`;
-    el.style.boxShadow = `${-x * 30}px ${-y * 20}px 60px rgba(0,0,0,0.4), 0 0 50px rgb(var(--accent)/0.25)`;
-  };
-  const handleLeave = (e) => {
-    const el = ref.current; if (!el) return;
-    el.style.transform = 'perspective(900px) rotateX(0) rotateY(0) scale(1)';
-    el.style.boxShadow = '';
-  };
-  return (
-    <div ref={ref} className={className}
-      style={{ transition: 'transform .5s cubic-bezier(0.16,1,0.3,1), box-shadow .5s ease', transformStyle: 'preserve-3d' }}
-      onMouseMove={handleMove} onMouseLeave={handleLeave}>
+      opacity: visible ? 1 : 0,
+      transform: visible ? 'translateY(0)' : 'translateY(32px)',
+      transition: `opacity 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}s, transform 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}s`,
+    }}>
       {children}
     </div>
   );
 }
 
-const MARQUEE_ITEMS = ['Flatmates','Trips','Road Trips','Dinner Splits','Office Lunches','Hostels','Vacations','House Parties','Roommates','Couples'];
+const MARQUEE_ITEMS = ['Flatmates', 'Road Trips', 'Office Lunches', 'Roommates', 'Vacations', 'House Parties', 'Goa Trips', 'Weekend Getaways'];
 
 export default function Landing() {
-  const [intro, setIntro] = useState(() => !sessionStorage.getItem('introPlayed'));
   const [scrolled, setScrolled] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!intro) return;
-    sessionStorage.setItem('introPlayed', '1');
-    const t = setTimeout(() => setIntro(false), 2000);
-    return () => clearTimeout(t);
-  }, [intro]);
-
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 30);
+    const fn = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
@@ -70,379 +44,450 @@ export default function Landing() {
   const handleLogout = () => { logout(); navigate('/'); };
 
   return (
-    <div className="min-h-screen bg-[#06060a] text-white overflow-x-hidden">
-
-      {/* ── INTRO ── */}
-      {intro && (
-        <div className="fixed inset-0 z-[99] bg-[#06060a] flex items-center justify-center"
-          style={{ animation: 'curtainUp .75s cubic-bezier(0.76,0,0.24,1) 1.5s forwards' }}>
-          <div style={{ animation: 'introMark 1.3s cubic-bezier(0.16,1,0.3,1) both' }}
-            className="flex items-center gap-3">
-            <div className="w-14 h-14 rounded-3xl bg-accent-grad flex items-center justify-center shadow-accent-glow">
-              <svg viewBox="0 0 24 24" className="w-7 h-7" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M7 7h10M7 7l3-3M7 7l3 3"/><path d="M17 17H7M17 17l-3 3M17 17l-3-3"/>
-              </svg>
-            </div>
-            <span className="text-4xl font-bold tracking-tight" style={{ animation: 'introWord .9s cubic-bezier(0.16,1,0.3,1) .5s both' }}>
-              Split<span className="shimmer-text">wise</span>
-            </span>
-          </div>
-        </div>
-      )}
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--text)', overflowX: 'hidden' }}>
 
       {/* ── NAV ── */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'glass border-b border-white/8 shadow-2xl' : ''}`}>
-        <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-xl bg-accent-grad flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M7 7h10M7 7l3-3M7 7l3 3"/><path d="M17 17H7M17 17l-3 3M17 17l-3-3"/>
-              </svg>
-            </div>
-            <span className="font-bold text-lg tracking-tight">Split<span className="text-accent-grad">wise</span></span>
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
+        background: scrolled ? 'var(--bg)' : 'transparent',
+        borderBottom: scrolled ? '1px solid var(--border)' : '1px solid transparent',
+        transition: 'background 0.3s ease, border-color 0.3s ease',
+      }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1.5rem', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Link to="/" style={{ textDecoration: 'none' }}>
+            <Logo />
           </Link>
-          <div className="hidden md:flex items-center gap-6 text-sm text-white/50">
-            {['#features','#how','#tiles'].map((h,i) => (
-              <a key={h} href={h} className="hover:text-white transition">{['Features','How it works','Why us'][i]}</a>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }} className="hidden md:flex">
+            {[['#features', 'Features'], ['#how', 'How it works']].map(([href, label]) => (
+              <a key={href} href={href} style={{
+                fontSize: '0.875rem', color: 'var(--text-2)', textDecoration: 'none',
+                transition: 'color 0.2s ease',
+              }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-2)'}
+              >{label}</a>
             ))}
           </div>
+
           {user ? (
-            <div className="flex items-center gap-2">
-              <div className="hidden sm:flex items-center gap-2 glass rounded-full px-3 py-1.5 text-sm text-white/70">
-                <div className="w-5 h-5 rounded-full bg-accent-grad flex items-center justify-center text-white text-[10px] font-bold">
-                  {user.username?.[0]?.toUpperCase()}
-                </div>
-                {user.username}
-              </div>
-              <Link to="/dashboard" className="flex items-center gap-1.5 text-sm font-semibold text-white bg-accent-grad px-4 py-1.5 rounded-full hover:opacity-90 transition shadow-accent-glow">
-                <LayoutDashboard size={13}/> Dashboard
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Link to="/dashboard" style={{
+                display: 'flex', alignItems: 'center', gap: '0.4rem',
+                fontSize: '0.875rem', fontWeight: 600, color: 'white',
+                background: 'var(--accent)', padding: '0.45rem 1rem',
+                borderRadius: '9999px', textDecoration: 'none',
+                transition: 'opacity 0.2s ease',
+              }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                <LayoutDashboard size={13} /> Dashboard
               </Link>
-              <button onClick={handleLogout} className="p-2 text-white/40 hover:text-red-400 transition">
-                <LogOut size={15}/>
+              <button onClick={handleLogout} style={{
+                padding: '0.45rem', background: 'none', border: 'none',
+                color: 'var(--text-3)', cursor: 'pointer', borderRadius: '8px',
+                transition: 'color 0.2s ease',
+              }}
+                onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
+              >
+                <LogOut size={15} />
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <Link to="/login" className="text-sm text-white/60 hover:text-white px-3 py-1.5 transition">Sign in</Link>
-              <Link to="/register" className="text-sm font-semibold text-white bg-accent-grad px-4 py-1.5 rounded-full hover:opacity-90 transition shadow-accent-glow">
-                Get started
-              </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Link to="/login" style={{
+                fontSize: '0.875rem', color: 'var(--text-2)', textDecoration: 'none',
+                padding: '0.45rem 0.75rem', transition: 'color 0.2s ease',
+              }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-2)'}
+              >Sign in</Link>
+              <Link to="/register" style={{
+                fontSize: '0.875rem', fontWeight: 600, color: 'white',
+                background: 'var(--accent)', padding: '0.45rem 1rem',
+                borderRadius: '9999px', textDecoration: 'none',
+                transition: 'opacity 0.2s ease',
+              }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >Get started</Link>
             </div>
           )}
         </div>
       </nav>
 
       {/* ── HERO ── */}
-      <section className="relative min-h-screen flex items-center justify-center mesh-bg dot-grid grain overflow-hidden pt-14">
-        {/* animated orbs */}
-        <div className="orb   absolute top-[15%] left-[10%]  w-72 h-72 rounded-full blur-[80px] opacity-40 pointer-events-none" style={{ background: 'rgb(var(--accent))' }}/>
-        <div className="orb-2 absolute bottom-[20%] right-[8%]  w-80 h-80 rounded-full blur-[90px] opacity-30 pointer-events-none" style={{ background: 'rgb(var(--accent-2))' }}/>
-        <div className="orb-3 absolute top-[50%] left-[45%] w-64 h-64 rounded-full blur-[100px] opacity-20 pointer-events-none" style={{ background: 'rgb(var(--accent))' }}/>
-
-        <div className="relative z-10 max-w-6xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+      <section style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: '56px', background: 'var(--bg)' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '5rem 1.5rem 4rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center' }} className="hero-grid">
           {/* LEFT */}
           <div>
-            <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 text-xs text-white/70 mb-8">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"/>
-              Shared expenses · Settled fairly
+            {/* Eyebrow pill */}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+              background: 'var(--accent-subtle)', color: 'var(--accent)',
+              borderRadius: '9999px', padding: '0.35rem 0.875rem',
+              fontSize: '0.75rem', fontWeight: 600, marginBottom: '1.5rem',
+              border: '1px solid var(--accent)',
+              opacity: 0.9,
+            }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
+              Shared expenses, settled fairly
             </div>
-            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.02] mb-6">
-              Splitting money<br/>
-              <span className="shimmer-text">is messy.</span><br/>
-              <span className="text-white/30">We fix that.</span>
+
+            <h1 style={{
+              fontSize: 'clamp(2.5rem, 5vw, 3.25rem)',
+              fontWeight: 700,
+              letterSpacing: '-0.02em',
+              lineHeight: 1.1,
+              marginBottom: '1.25rem',
+              color: 'var(--text)',
+            }}>
+              Split expenses,<br />not friendships.
             </h1>
-            <p className="text-lg text-white/50 leading-relaxed max-w-md mb-10">
-              Track shared spending, convert currencies, import chaotic spreadsheets, and settle debts — all from one beautiful interface.
+
+            <p style={{
+              fontSize: '1.0625rem', color: 'var(--text-2)', lineHeight: 1.65,
+              maxWidth: '440px', marginBottom: '2rem',
+            }}>
+              Track shared spending, convert currencies, import spreadsheets, and settle debts — all in one clean interface.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Link to={user ? '/dashboard' : '/register'}
-                className="inline-flex items-center gap-2 bg-accent-grad text-white font-semibold px-7 py-3.5 rounded-2xl shadow-accent-glow hover:opacity-90 hover:scale-105 transition-all duration-300 text-sm">
-                {user ? 'Open Dashboard' : 'Get started free'} <ArrowRight size={16}/>
+
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <Link to={user ? '/dashboard' : '/register'} style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                background: 'var(--accent)', color: 'white', fontWeight: 600,
+                padding: '0.75rem 1.5rem', borderRadius: '0.75rem',
+                textDecoration: 'none', fontSize: '0.9375rem',
+                transition: 'opacity 0.2s ease, transform 0.2s ease',
+                boxShadow: '0 2px 8px rgba(99,102,241,0.25)',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = '0.88'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                {user ? 'Open Dashboard' : 'Get started free'} <ArrowRight size={16} />
               </Link>
-              <a href="#features"
-                className="inline-flex items-center gap-2 glass text-white/70 hover:text-white font-medium px-7 py-3.5 rounded-2xl transition text-sm hover:bg-white/10">
+              <a href="#features" style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                background: 'var(--bg-muted)', color: 'var(--text-2)', fontWeight: 500,
+                padding: '0.75rem 1.5rem', borderRadius: '0.75rem',
+                textDecoration: 'none', fontSize: '0.9375rem',
+                border: '1px solid var(--border)',
+                transition: 'color 0.2s ease, border-color 0.2s ease',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-2)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+              >
                 See features
               </a>
             </div>
-            {/* mini stats */}
-            <div className="flex gap-8 mt-12">
-              {[['4+','Split types'],['12+','Anomalies detected'],['30d','Session length']].map(([n,l]) => (
+
+            {/* Mini stats */}
+            <div style={{ display: 'flex', gap: '2rem', marginTop: '2.5rem', paddingTop: '2rem', borderTop: '1px solid var(--border)' }}>
+              {[['4+', 'Split types'], ['Zero', 'Data sold'], ['Free', 'Forever']].map(([n, l]) => (
                 <div key={l}>
-                  <div className="text-2xl font-bold text-white">{n}</div>
-                  <div className="text-xs text-white/40 mt-0.5">{l}</div>
+                  <div style={{ fontSize: '1.375rem', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>{n}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: '0.2rem' }}>{l}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* RIGHT — 3D floating card */}
-          <div className="relative flex items-center justify-center">
-            <TiltCard className="w-full max-w-md" intensity={8}>
-              <div className="glass rounded-3xl overflow-hidden shadow-2xl">
-                {/* window bar */}
-                <div className="flex items-center gap-1.5 px-5 py-3 border-b border-white/8 bg-white/3">
-                  <div className="w-3 h-3 rounded-full bg-red-500/80"/>
-                  <div className="w-3 h-3 rounded-full bg-yellow-400/80"/>
-                  <div className="w-3 h-3 rounded-full bg-green-500/80"/>
-                  <span className="ml-3 text-[11px] text-white/30">Goa Trip 2024 · Balances</span>
-                </div>
-                <div className="p-5 space-y-2.5">
-                  {[['A','Aisha','+₹4,250',true,'from-violet-500 to-purple-600'],
-                    ['R','Rohan','−₹1,180',false,'from-blue-500 to-cyan-500'],
-                    ['P','Priya','+₹890',true,'from-emerald-500 to-teal-500'],
-                    ['D','Dev','−₹3,960',false,'from-orange-500 to-rose-500']
-                  ].map(([l,n,a,p,g]) => (
-                    <div key={n} className="flex items-center justify-between bg-white/5 hover:bg-white/8 rounded-2xl px-4 py-3 transition">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${g} flex items-center justify-center text-white text-xs font-bold`}>{l}</div>
-                        <span className="text-sm text-white/80 font-medium">{n}</span>
-                      </div>
-                      <span className={`text-sm font-bold ${p ? 'text-emerald-400' : 'text-red-400'}`}>{a}</span>
+          {/* RIGHT — app mockup with subtle 3D tilt (static, not animated) */}
+          <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <div style={{
+              width: '100%', maxWidth: '400px',
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
+              borderRadius: '1.25rem',
+              boxShadow: 'var(--shadow-xl)',
+              overflow: 'hidden',
+              transform: 'perspective(1000px) rotateX(4deg) rotateY(-6deg)',
+            }}>
+              {/* Window bar */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '0.375rem',
+                padding: '0.75rem 1.125rem',
+                borderBottom: '1px solid var(--border)',
+                background: 'var(--bg-subtle)',
+              }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', opacity: 0.8 }} />
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b', opacity: 0.8 }} />
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e', opacity: 0.8 }} />
+                <span style={{ marginLeft: '0.625rem', fontSize: '0.6875rem', color: 'var(--text-3)' }}>Goa Trip 2024 · Balances</span>
+              </div>
+              <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {[
+                  { i: 'A', n: 'Aisha', a: '+₹4,250', pos: true },
+                  { i: 'R', n: 'Rohan', a: '−₹1,180', pos: false },
+                  { i: 'P', n: 'Priya', a: '+₹890', pos: true },
+                  { i: 'D', n: 'Dev', a: '−₹3,960', pos: false },
+                ].map(({ i, n, a, pos }) => (
+                  <div key={n} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: 'var(--bg-subtle)', borderRadius: '0.625rem',
+                    padding: '0.625rem 0.875rem',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                      <div style={{
+                        width: '30px', height: '30px', borderRadius: '50%',
+                        background: 'var(--accent)', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', color: 'white', fontSize: '0.6875rem', fontWeight: 700,
+                        opacity: pos ? 1 : 0.5,
+                      }}>{i}</div>
+                      <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>{n}</span>
+                    </div>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 700, color: pos ? '#22c55e' : '#ef4444' }}>{a}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ padding: '0 1rem 1rem' }}>
+                <div style={{
+                  background: 'var(--accent-subtle)', borderRadius: '0.625rem',
+                  padding: '0.75rem', border: '1px solid var(--border)',
+                }}>
+                  <p style={{ fontSize: '0.6875rem', color: 'var(--text-3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
+                    Settle in 2 payments
+                  </p>
+                  {[['Rohan → Aisha', '₹1,180'], ['Dev → Aisha', '₹3,070']].map(([t, a]) => (
+                    <div key={t} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.3rem 0' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-2)' }}>{t}</span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)' }}>{a}</span>
                     </div>
                   ))}
                 </div>
-                <div className="px-5 pb-5">
-                  <div className="bg-accent/10 border border-accent/20 rounded-2xl p-4">
-                    <p className="text-[10px] text-white/30 uppercase tracking-widest mb-2">Settle up in 2 payments</p>
-                    {[['Rohan → Aisha','₹1,180'],['Dev → Aisha','₹3,070']].map(([t,a]) => (
-                      <div key={t} className="flex justify-between py-1.5">
-                        <span className="text-xs text-white/60">{t}</span>
-                        <span className="text-xs font-bold text-accent-grad">{a}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
-            </TiltCard>
-            {/* floating badge */}
-            <div className="floating absolute -top-6 -right-4 glass rounded-2xl px-4 py-3 shadow-xl">
-              <div className="text-xs text-white/50 mb-1">USD → INR</div>
-              <div className="text-base font-bold text-white">$50 = <span className="text-accent-grad">₹4,755</span></div>
             </div>
-            <div className="floating-slow absolute -bottom-4 -left-6 glass rounded-2xl px-4 py-3 shadow-xl">
-              <div className="text-[10px] text-white/40 mb-1">12 anomalies caught</div>
-              <div className="flex gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-red-400"/>
-                <span className="w-2 h-2 rounded-full bg-amber-400"/>
-                <span className="w-2 h-2 rounded-full bg-blue-400"/>
+
+            {/* Floating badge */}
+            <div className="float-badge" style={{
+              position: 'absolute', top: '-1.25rem', right: '-1rem',
+              background: 'var(--card)', border: '1px solid var(--border)',
+              borderRadius: '0.875rem', padding: '0.625rem 0.875rem',
+              boxShadow: 'var(--shadow-lg)',
+            }}>
+              <div style={{ fontSize: '0.6875rem', color: 'var(--text-3)', marginBottom: '0.2rem' }}>USD → INR</div>
+              <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text)' }}>
+                $50 = <span style={{ color: 'var(--accent)' }}>₹4,755</span>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Mobile single-column fallback */}
+        <style>{`
+          @media (max-width: 768px) {
+            .hero-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
+            .hero-grid > div:last-child { display: none !important; }
+          }
+        `}</style>
       </section>
 
       {/* ── MARQUEE ── */}
-      <div className="border-y border-white/8 bg-white/3 py-4 overflow-hidden">
-        <div className="flex gap-8 animate-marquee whitespace-nowrap">
-          {[...MARQUEE_ITEMS,...MARQUEE_ITEMS].map((t,i) => (
-            <span key={i} className="text-sm font-medium text-white/30 flex items-center gap-8">
-              {t} <span className="text-accent-grad text-lg">◆</span>
+      <div style={{
+        borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)',
+        background: 'var(--bg-subtle)', padding: '0.875rem 0', overflow: 'hidden',
+      }}>
+        <div className="animate-marquee" style={{ display: 'flex', gap: '2rem', whiteSpace: 'nowrap' }}>
+          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((t, i) => (
+            <span key={i} style={{
+              fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-3)',
+              display: 'inline-flex', alignItems: 'center', gap: '2rem',
+            }}>
+              {t}
+              <span style={{ color: 'var(--accent)', opacity: 0.5 }}>◆</span>
             </span>
           ))}
         </div>
       </div>
 
-      {/* ── FEATURES GRID ── */}
-      <section id="features" className="py-28 px-6 max-w-6xl mx-auto">
+      {/* ── FEATURES ── */}
+      <section id="features" style={{ padding: '6rem 1.5rem', maxWidth: '1100px', margin: '0 auto' }}>
         <Reveal>
-          <div className="text-center mb-20">
-            <p className="text-xs font-semibold tracking-widest uppercase text-accent mb-4">Features</p>
-            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
-              Everything in one place.<br/><span className="text-white/25">Nothing missing.</span>
+          <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
+            <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '0.75rem' }}>
+              Features
+            </p>
+            <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)', lineHeight: 1.15 }}>
+              Everything in one place.
             </h2>
+            <p style={{ fontSize: '1.0625rem', color: 'var(--text-2)', maxWidth: '480px', margin: '0.875rem auto 0', lineHeight: 1.6 }}>
+              Purpose-built for groups. No spreadsheets, no awkward reminders.
+            </p>
           </div>
         </Reveal>
-        <div className="grid md:grid-cols-3 gap-4">
-          {/* tall card */}
-          <Reveal delay={0} className="md:col-span-1 md:row-span-2">
-            <TiltCard className="h-full" intensity={6}>
-              <div className="glass rounded-3xl p-8 h-full flex flex-col min-h-[480px] hover:border-accent/30 transition-colors duration-300">
-                <div className="w-12 h-12 rounded-2xl bg-accent-grad flex items-center justify-center mb-6 shadow-accent-glow">
-                  <TrendingUp size={22} className="text-white"/>
-                </div>
-                <h3 className="text-2xl font-bold mb-3">Smart Balances</h3>
-                <p className="text-white/50 text-sm leading-relaxed mb-8">Min-cash-flow algorithm collapses dozens of expenses into the fewest possible payments. Click any member for a full expense breakdown.</p>
-                <div className="flex-1 flex flex-col justify-end gap-2">
-                  {[['Rohan → Aisha','₹1,180'],['Dev → Aisha','₹3,070']].map(([t,a]) => (
-                    <div key={t} className="flex justify-between items-center bg-white/5 rounded-xl px-4 py-3">
-                      <span className="text-xs text-white/60">{t}</span>
-                      <span className="text-sm font-bold text-accent-grad">{a}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </TiltCard>
-          </Reveal>
 
-          <Reveal delay={0.05}>
-            <TiltCard intensity={6}>
-              <div className="glass rounded-3xl p-7 min-h-[220px]">
-                <div className="w-11 h-11 rounded-2xl bg-orange-500/20 flex items-center justify-center mb-5 border border-orange-400/20">
-                  <Globe size={20} className="text-orange-400"/>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+          {[
+            {
+              Icon: TrendingUp, color: '#6366f1', bg: 'rgba(99,102,241,0.08)',
+              title: 'Smart Balances',
+              desc: 'Min-cash-flow algorithm collapses dozens of debts into the fewest possible payments. Click any member for a full breakdown.',
+            },
+            {
+              Icon: Globe, color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',
+              title: 'Multi-currency',
+              desc: 'USD, INR — auto-converted at the real exchange rate. Original and converted amounts stored for a full audit trail.',
+            },
+            {
+              Icon: Users, color: '#3b82f6', bg: 'rgba(59,130,246,0.08)',
+              title: 'Time-aware Members',
+              desc: 'Members who left before an expense are excluded automatically. Join and leave dates on every membership.',
+            },
+            {
+              Icon: Upload, color: '#8b5cf6', bg: 'rgba(139,92,246,0.08)',
+              title: 'CSV Import',
+              desc: '12 anomaly detectors catch duplicates, bad dates, and refunds — all surfaced for review before import.',
+            },
+            {
+              Icon: Zap, color: '#ec4899', bg: 'rgba(236,72,153,0.08)',
+              title: 'All Split Types',
+              desc: 'Equal, exact amounts, percentage, or custom shares — pick the right split for every expense.',
+            },
+            {
+              Icon: Shield, color: '#22c55e', bg: 'rgba(34,197,94,0.08)',
+              title: 'Full Audit Trail',
+              desc: 'Every import decision logged. Every anomaly surfaced. Nothing changes without a record you can review.',
+            },
+          ].map(({ Icon, color, bg, title, desc }, i) => (
+            <Reveal key={title} delay={i * 0.05}>
+              <div style={{
+                background: 'var(--card)', border: '1px solid var(--border)',
+                borderRadius: '1rem', padding: '1.5rem',
+                boxShadow: 'var(--shadow)',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+                cursor: 'default',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
+              >
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '0.625rem',
+                  background: bg, display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', marginBottom: '1rem',
+                }}>
+                  <Icon size={19} style={{ color }} />
                 </div>
-                <h3 className="text-xl font-bold mb-2">Multi-currency</h3>
-                <p className="text-white/50 text-sm leading-relaxed">USD, INR — auto-converted at the real exchange rate. Original + converted stored for full audit trail.</p>
-                <div className="mt-4 flex items-center gap-2 text-sm">
-                  <span className="text-white/30">$50</span>
-                  <ArrowRight size={13} className="text-accent"/>
-                  <span className="font-bold text-accent-grad">₹4,755.50</span>
-                </div>
+                <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.5rem', letterSpacing: '-0.01em' }}>
+                  {title}
+                </h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-2)', lineHeight: 1.6, margin: 0 }}>
+                  {desc}
+                </p>
               </div>
-            </TiltCard>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <TiltCard intensity={6}>
-              <div className="glass rounded-3xl p-7 min-h-[220px]">
-                <div className="w-11 h-11 rounded-2xl bg-blue-500/20 flex items-center justify-center mb-5 border border-blue-400/20">
-                  <Users size={20} className="text-blue-400"/>
-                </div>
-                <h3 className="text-xl font-bold mb-2">Time-aware Members</h3>
-                <p className="text-white/50 text-sm leading-relaxed">Meera left March 31? April's electricity won't touch her balance. Join/leave dates on every membership.</p>
-                <div className="mt-4 flex gap-2">
-                  {[['M','left','bg-zinc-700'],['S','active','bg-gradient-to-br from-emerald-500 to-teal-500']].map(([l,s,g]) => (
-                    <div key={l} className="flex items-center gap-1.5 text-xs text-white/50">
-                      <div className={`w-5 h-5 rounded-full ${g} flex items-center justify-center text-white text-[9px] font-bold`}>{l}</div>
-                      {s}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </TiltCard>
-          </Reveal>
-
-          <Reveal delay={0.15}>
-            <TiltCard intensity={6}>
-              <div className="glass rounded-3xl p-7 min-h-[220px]">
-                <div className="w-11 h-11 rounded-2xl bg-purple-500/20 flex items-center justify-center mb-5 border border-purple-400/20">
-                  <Upload size={20} className="text-purple-400"/>
-                </div>
-                <h3 className="text-xl font-bold mb-2">CSV Import</h3>
-                <p className="text-white/50 text-sm leading-relaxed">Import messy spreadsheets. 12 anomaly detectors catch duplicates, bad dates, refunds — all surfaced for review.</p>
-                <div className="mt-4 space-y-1.5">
-                  {[['error','Invalid date'],['warning','Duplicate row'],['info','USD converted']].map(([sev,t]) => (
-                    <div key={t} className={`flex items-center gap-2 text-[11px] rounded-lg px-2.5 py-1.5 ${sev==='error'?'bg-red-500/10 text-red-400':sev==='warning'?'bg-amber-400/10 text-amber-300':'bg-blue-400/10 text-blue-300'}`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-current"/>
-                      {t}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </TiltCard>
-          </Reveal>
-
-          <Reveal delay={0.2}>
-            <TiltCard intensity={6}>
-              <div className="glass rounded-3xl p-7 min-h-[220px]">
-                <div className="w-11 h-11 rounded-2xl bg-rose-500/20 flex items-center justify-center mb-5 border border-rose-400/20">
-                  <Zap size={20} className="text-rose-400"/>
-                </div>
-                <h3 className="text-xl font-bold mb-2">All Split Types</h3>
-                <p className="text-white/50 text-sm leading-relaxed">Equal, exact amounts, percentage, or shares — pick the right split for every expense.</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {['Equal','Exact','%','Shares'].map(t => (
-                    <span key={t} className="text-xs glass rounded-full px-3 py-1 text-white/60">{t}</span>
-                  ))}
-                </div>
-              </div>
-            </TiltCard>
-          </Reveal>
-
-          <Reveal delay={0.25}>
-            <TiltCard intensity={6}>
-              <div className="glass rounded-3xl p-7 min-h-[220px]">
-                <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 flex items-center justify-center mb-5 border border-emerald-400/20">
-                  <Shield size={20} className="text-emerald-400"/>
-                </div>
-                <h3 className="text-xl font-bold mb-2">Full Audit Trail</h3>
-                <p className="text-white/50 text-sm leading-relaxed">Every import decision logged. Every anomaly surfaced. Nothing changes without a record you can review.</p>
-                <div className="mt-4 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                  <div className="h-full w-[78%] bg-accent-grad rounded-full" style={{ animation: 'introWord 2s ease 0.5s both' }}/>
-                </div>
-                <p className="text-[10px] text-white/30 mt-2">78% of CSV rows imported cleanly</p>
-              </div>
-            </TiltCard>
-          </Reveal>
+            </Reveal>
+          ))}
         </div>
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="how" className="py-24 px-6 border-t border-white/6">
-        <div className="max-w-5xl mx-auto">
+      <section id="how" style={{
+        padding: '5rem 1.5rem',
+        background: 'var(--bg-subtle)',
+        borderTop: '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)',
+      }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <Reveal>
-            <div className="text-center mb-16">
-              <p className="text-xs font-semibold tracking-widest uppercase text-accent mb-4">How it works</p>
-              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">Three steps.<br/><span className="text-white/25">Zero confusion.</span></h2>
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '0.75rem' }}>
+                How it works
+              </p>
+              <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)', lineHeight: 1.15 }}>
+                Three steps. Zero confusion.
+              </h2>
             </div>
           </Reveal>
-          <div className="relative">
-            {/* connecting line */}
-            <div className="hidden md:block absolute top-12 left-[16.6%] right-[16.6%] h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent"/>
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                { n: '01', Icon: Users, c: 'from-violet-500 to-purple-600', t: 'Create a group', d: 'Add members with real join and leave dates. Time-aware from day one.' },
-                { n: '02', Icon: Zap, c: 'from-orange-500 to-rose-500', t: 'Log expenses', d: 'Any split type, any currency. INR or USD — auto-converted at the right rate.' },
-                { n: '03', Icon: TrendingUp, c: 'from-emerald-500 to-teal-500', t: 'Settle up', d: 'Min-cash-flow gives you the fewest payments. Record them and you\'re done.' },
-              ].map(({ n, Icon, c, t, d }, i) => (
-                <Reveal key={n} delay={i * 0.1}>
-                  <TiltCard intensity={5}>
-                    <div className="glass rounded-3xl p-8 text-center">
-                      <div className={`w-16 h-16 rounded-3xl bg-gradient-to-br ${c} flex items-center justify-center mx-auto mb-5 shadow-lg`}>
-                        <Icon size={26} className="text-white"/>
-                      </div>
-                      <div className="text-xs text-white/20 font-bold mb-2">{n}</div>
-                      <h3 className="text-xl font-bold mb-3">{t}</h3>
-                      <p className="text-sm text-white/50 leading-relaxed">{d}</p>
-                    </div>
-                  </TiltCard>
-                </Reveal>
-              ))}
-            </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
+            {[
+              { n: '01', title: 'Create a group', desc: 'Add members with real join and leave dates. Time-aware expense splitting from day one.' },
+              { n: '02', title: 'Log expenses', desc: 'Any split type, any currency. INR or USD — auto-converted at the right rate.' },
+              { n: '03', title: 'Settle up', desc: 'Min-cash-flow gives you the fewest payments needed. Record them and you\'re done.' },
+            ].map(({ n, title, desc }, i) => (
+              <Reveal key={n} delay={i * 0.1}>
+                <div style={{
+                  background: 'var(--card)', border: '1px solid var(--border)',
+                  borderRadius: '1rem', padding: '1.75rem',
+                  boxShadow: 'var(--shadow)',
+                }}>
+                  <div style={{
+                    fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent)',
+                    letterSpacing: '0.08em', marginBottom: '0.875rem',
+                    fontVariantNumeric: 'tabular-nums',
+                  }}>{n}</div>
+                  <h3 style={{ fontSize: '1.0625rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.5rem', letterSpacing: '-0.01em' }}>
+                    {title}
+                  </h3>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-2)', lineHeight: 1.6, margin: 0 }}>
+                    {desc}
+                  </p>
+                </div>
+              </Reveal>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ── CTA ── */}
-      <section id="tiles" className="py-28 px-6">
-        <div className="max-w-4xl mx-auto">
-          <Reveal>
-            <TiltCard intensity={4}>
-              <div className="relative rounded-3xl overflow-hidden mesh-bg grain text-center py-20 px-8">
-                <div className="orb absolute top-0 left-1/4 w-64 h-64 rounded-full blur-[80px] opacity-40" style={{ background: 'rgb(var(--accent))' }}/>
-                <div className="orb-2 absolute bottom-0 right-1/4 w-56 h-56 rounded-full blur-[70px] opacity-30" style={{ background: 'rgb(var(--accent-2))' }}/>
-                <div className="relative z-10">
-                  <p className="text-xs font-semibold tracking-widest uppercase text-accent/80 mb-4">Stop chasing people</p>
-                  <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight mb-6">
-                    Money sorted.<br/>
-                    <span className="shimmer-text">Friendships saved.</span>
-                  </h2>
-                  <p className="text-white/50 text-lg mb-10 max-w-lg mx-auto">Free forever. No card. 30-second setup.</p>
-                  <Link to={user ? '/dashboard' : '/register'}
-                    className="inline-flex items-center gap-2 bg-white text-[#1d1d1f] font-bold px-8 py-4 rounded-2xl hover:bg-white/90 hover:scale-105 transition-all duration-300 text-base shadow-2xl">
-                    {user ? 'Go to Dashboard' : 'Start for free'} <ArrowRight size={18}/>
-                  </Link>
-                </div>
-              </div>
-            </TiltCard>
-          </Reveal>
-        </div>
+      {/* ── CTA BANNER ── */}
+      <section style={{ padding: '5rem 1.5rem' }}>
+        <Reveal>
+          <div style={{
+            maxWidth: '700px', margin: '0 auto', textAlign: 'center',
+            background: 'var(--bg-subtle)', border: '1px solid var(--border)',
+            borderRadius: '1.5rem', padding: '3.5rem 2rem',
+            boxShadow: 'var(--shadow)',
+          }}>
+            <p style={{ fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '1rem' }}>
+              Stop chasing people
+            </p>
+            <h2 style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)', lineHeight: 1.15, marginBottom: '1rem' }}>
+              Money sorted.<br />Friendships saved.
+            </h2>
+            <p style={{ fontSize: '1rem', color: 'var(--text-2)', marginBottom: '2rem', lineHeight: 1.6 }}>
+              Free forever. No card. 30-second setup.
+            </p>
+            <Link to={user ? '/dashboard' : '/register'} style={{
+              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+              background: 'var(--accent)', color: 'white', fontWeight: 600,
+              padding: '0.875rem 2rem', borderRadius: '0.875rem',
+              textDecoration: 'none', fontSize: '1rem',
+              transition: 'opacity 0.2s ease, transform 0.2s ease',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.opacity = '0.88'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)'; }}
+            >
+              {user ? 'Go to Dashboard' : 'Start for free'} <ArrowRight size={18} />
+            </Link>
+          </div>
+        </Reveal>
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-white/8 py-10 px-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-white/30">
-          <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded-lg bg-accent-grad flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-3 h-3" fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M7 7h10M7 7l3-3M7 7l3 3"/><path d="M17 17H7M17 17l-3 3M17 17l-3-3"/>
-              </svg>
-            </div>
-            <span>Copyright © 2024 Splitwise</span>
-          </div>
-          <p className="text-white/20">Node.js · Express · React · PostgreSQL (Neon) · Prisma</p>
-          <div className="flex gap-5">
-            <Link to="/login" className="hover:text-white transition">Sign in</Link>
-            <Link to="/register" className="text-accent hover:opacity-80 transition font-medium">Get started</Link>
+      <footer style={{
+        borderTop: '1px solid var(--border)',
+        padding: '2.5rem 1.5rem',
+      }}>
+        <div style={{
+          maxWidth: '1100px', margin: '0 auto',
+          display: 'flex', flexWrap: 'wrap', gap: '1rem',
+          alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <Logo size="sm" />
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', margin: 0 }}>
+            Node.js · Express · React · PostgreSQL (Neon) · Prisma
+          </p>
+          <div style={{ display: 'flex', gap: '1.25rem' }}>
+            {[['Sign in', '/login'], ['Get started', '/register']].map(([label, to]) => (
+              <Link key={to} to={to} style={{
+                fontSize: '0.8125rem', color: label === 'Get started' ? 'var(--accent)' : 'var(--text-3)',
+                textDecoration: 'none', transition: 'color 0.2s ease',
+              }}
+                onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
+                onMouseLeave={e => e.currentTarget.style.color = label === 'Get started' ? 'var(--accent)' : 'var(--text-3)'}
+              >{label}</Link>
+            ))}
           </div>
         </div>
       </footer>

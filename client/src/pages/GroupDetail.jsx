@@ -2,45 +2,101 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { Plus, ArrowLeft, Upload, Check, X, Info, AlertTriangle, ArrowLeftRight, Home, Receipt, TrendingUp, Users, ArrowRight } from 'lucide-react';
+import { Plus, ArrowLeft, Upload, Check, X, Info, AlertTriangle, ArrowLeftRight, Home, Receipt, TrendingUp, Users } from 'lucide-react';
 
 const TABS = ['Expenses', 'Balances', 'Settlements', 'Members', 'Import'];
+const AVATAR_COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ec4899', '#3b82f6', '#8b5cf6'];
 
-const avatarGrads = [
-  'linear-gradient(135deg,#6366f1,#d946ef)',
-  'linear-gradient(135deg,#10b981,#06b6d4)',
-  'linear-gradient(135deg,#f97316,#f43f5e)',
-  'linear-gradient(135deg,#8b5cf6,#ec4899)',
-  'linear-gradient(135deg,#2563eb,#06b6d4)',
-  'linear-gradient(135deg,#f43f5e,#fb7185)',
-];
-
-const inputCls = "w-full rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none transition";
-const inputStyle = { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' };
-
-function DarkInput({ label, ...props }) {
+/* ── Shared input primitives ── */
+function FieldInput({ label, ...props }) {
   return (
     <div>
-      {label && <label className="block text-sm font-medium text-white/50 mb-1.5">{label}</label>}
-      <input className={inputCls} style={inputStyle}
-        onFocus={e => e.target.style.borderColor = 'rgb(var(--accent)/0.6)'}
-        onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
-        {...props} />
+      {label && <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-2)', marginBottom: '0.3rem' }}>{label}</label>}
+      <input
+        style={{
+          width: '100%', background: 'var(--bg-subtle)', border: '1px solid var(--border)',
+          borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.9rem',
+          color: 'var(--text)', outline: 'none', transition: 'border-color 0.2s ease',
+          boxSizing: 'border-box',
+        }}
+        onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+        onBlur={e => e.target.style.borderColor = 'var(--border)'}
+        {...props}
+      />
     </div>
   );
 }
 
-function DarkSelect({ label, children, ...props }) {
+function FieldSelect({ label, children, ...props }) {
   return (
     <div>
-      {label && <label className="block text-sm font-medium text-white/50 mb-1.5">{label}</label>}
-      <select className={inputCls} style={{ ...inputStyle, colorScheme: 'dark' }}
-        onFocus={e => e.target.style.borderColor = 'rgb(var(--accent)/0.6)'}
-        onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
-        {...props}>{children}</select>
+      {label && <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-2)', marginBottom: '0.3rem' }}>{label}</label>}
+      <select
+        style={{
+          width: '100%', background: 'var(--bg-subtle)', border: '1px solid var(--border)',
+          borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.9rem',
+          color: 'var(--text)', outline: 'none', transition: 'border-color 0.2s ease',
+          boxSizing: 'border-box', colorScheme: 'light dark',
+        }}
+        onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+        onBlur={e => e.target.style.borderColor = 'var(--border)'}
+        {...props}
+      >
+        {children}
+      </select>
     </div>
   );
 }
+
+function Modal({ onClose, title, subtitle, children }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 50, padding: '1rem',
+      background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
+    }} onClick={onClose}>
+      <div style={{
+        width: '100%', maxWidth: '480px',
+        background: 'var(--card)', border: '1px solid var(--border)',
+        borderRadius: '1rem', padding: '1.5rem',
+        boxShadow: 'var(--shadow-xl)',
+        maxHeight: '90vh', overflowY: 'auto',
+        animation: 'rise 0.2s cubic-bezier(0.16,1,0.3,1)',
+      }} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+          <div>
+            <h2 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text)' }}>{title}</h2>
+            {subtitle && <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginTop: '0.2rem' }}>{subtitle}</p>}
+          </div>
+          <button onClick={onClose} style={{
+            width: '28px', height: '28px', borderRadius: '0.375rem', display: 'flex',
+            alignItems: 'center', justifyContent: 'center', background: 'none',
+            border: 'none', color: 'var(--text-3)', cursor: 'pointer',
+            transition: 'background 0.15s ease, color 0.15s ease', flexShrink: 0,
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-muted)'; e.currentTarget.style.color = 'var(--text)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-3)'; }}
+          >
+            <X size={15} />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+const modalBtnRow = { display: 'flex', gap: '0.75rem', paddingTop: '0.25rem' };
+const cancelBtnStyle = {
+  flex: 1, padding: '0.625rem', borderRadius: '0.5rem', fontSize: '0.9rem',
+  fontWeight: 500, color: 'var(--text-2)', background: 'var(--bg-subtle)',
+  border: '1px solid var(--border)', cursor: 'pointer',
+};
+const submitBtnStyle = {
+  flex: 1, padding: '0.625rem', borderRadius: '0.5rem', fontSize: '0.9rem',
+  fontWeight: 600, color: 'white', background: 'var(--accent)',
+  border: 'none', cursor: 'pointer', transition: 'opacity 0.2s ease',
+};
 
 export default function GroupDetail() {
   const { id } = useParams();
@@ -131,151 +187,231 @@ export default function GroupDetail() {
   };
 
   if (!group) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0d0d12' }}>
-      <div className="text-center">
-        <div className="w-10 h-10 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-        <p className="text-white/30 text-sm">Loading...</p>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{
+          width: '36px', height: '36px', border: '2px solid var(--accent)',
+          borderTopColor: 'transparent', borderRadius: '50%',
+          animation: 'spin 0.7s linear infinite', margin: '0 auto 0.75rem',
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-3)' }}>Loading...</p>
       </div>
     </div>
   );
 
   const activeMembers = group.memberships.filter(m => !m.leftAt);
   const pendingLogs = importLogs.filter(l => l.status === 'pending').length;
-  const modalBg = { background: '#141418', border: '1px solid rgba(255,255,255,0.1)' };
+
+  const tabStyle = (t) => ({
+    padding: '0.375rem 0.875rem', borderRadius: '9999px', fontSize: '0.875rem',
+    fontWeight: 500, cursor: 'pointer', border: 'none',
+    background: tab === t ? 'var(--accent)' : 'transparent',
+    color: tab === t ? 'white' : 'var(--text-2)',
+    transition: 'background 0.15s ease, color 0.15s ease',
+    position: 'relative',
+  });
 
   return (
-    <div className="min-h-screen flex" style={{ background: '#0d0d12' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--bg)' }}>
 
       {/* ── SIDEBAR ── */}
-      <aside className="w-64 min-h-screen fixed left-0 top-0 flex flex-col z-40"
-        style={{ background: 'rgba(255,255,255,0.03)', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
-
-        {/* back nav */}
-        <div className="px-4 py-4 border-b border-white/6">
-          <div className="flex items-center justify-between mb-4">
-            <Link to="/dashboard" className="flex items-center gap-1.5 text-sm text-white/40 hover:text-white transition">
-              <ArrowLeft size={14}/> All groups
+      <aside style={{
+        width: '256px', minHeight: '100vh', position: 'fixed', left: 0, top: 0,
+        display: 'flex', flexDirection: 'column', zIndex: 40,
+        background: 'var(--bg-subtle)', borderRight: '1px solid var(--border)',
+      }}>
+        {/* Header */}
+        <div style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <Link to="/dashboard" style={{
+              display: 'flex', alignItems: 'center', gap: '0.375rem',
+              fontSize: '0.8125rem', color: 'var(--text-2)', textDecoration: 'none',
+              transition: 'color 0.15s ease',
+            }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--text-2)'}
+            >
+              <ArrowLeft size={13} /> All groups
             </Link>
-            <Link to="/" className="text-white/30 hover:text-white transition p-1"><Home size={14}/></Link>
+            <Link to="/" style={{ color: 'var(--text-3)', transition: 'color 0.15s ease' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
+            >
+              <Home size={14} />
+            </Link>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg flex-shrink-0"
-              style={{ background: avatarGrads[0] }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+            <div style={{
+              width: '38px', height: '38px', borderRadius: '0.625rem', flexShrink: 0,
+              background: AVATAR_COLORS[0],
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'white', fontSize: '1.125rem', fontWeight: 700,
+            }}>
               {group.name[0].toUpperCase()}
             </div>
-            <div className="min-w-0">
-              <p className="font-bold text-white text-sm truncate">{group.name}</p>
-              <p className="text-[11px] text-white/30">{group.memberships.length} members</p>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {group.name}
+              </p>
+              <p style={{ fontSize: '0.6875rem', color: 'var(--text-3)' }}>{group.memberships.length} members</p>
             </div>
           </div>
         </div>
 
-        {/* tabs */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
+        {/* Tab nav */}
+        <nav style={{ flex: 1, padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '1px' }}>
           {TABS.map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition flex items-center justify-between"
-              style={{
-                background: tab === t ? 'rgba(255,255,255,0.08)' : 'transparent',
-                color: tab === t ? 'white' : 'rgba(255,255,255,0.45)',
-              }}
-              onMouseEnter={e => { if (tab !== t) e.currentTarget.style.background='rgba(255,255,255,0.04)'; }}
-              onMouseLeave={e => { if (tab !== t) e.currentTarget.style.background='transparent'; }}>
+            <button key={t} onClick={() => setTab(t)} style={{
+              width: '100%', textAlign: 'left', padding: '0.5rem 0.625rem', borderRadius: '0.5rem',
+              fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', border: 'none',
+              background: tab === t ? 'var(--bg-muted)' : 'transparent',
+              color: tab === t ? 'var(--text)' : 'var(--text-2)',
+              transition: 'background 0.15s ease, color 0.15s ease',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            }}
+              onMouseEnter={e => { if (tab !== t) { e.currentTarget.style.background = 'var(--bg-muted)'; e.currentTarget.style.color = 'var(--text)'; } }}
+              onMouseLeave={e => { if (tab !== t) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-2)'; } }}
+            >
               <span>{t}</span>
               {t === 'Import' && pendingLogs > 0 && (
-                <span className="text-[10px] font-bold bg-orange-500 text-white px-1.5 py-0.5 rounded-full">{pendingLogs}</span>
+                <span style={{
+                  fontSize: '0.625rem', fontWeight: 700, background: '#f59e0b', color: 'white',
+                  padding: '0.15rem 0.4rem', borderRadius: '9999px',
+                }}>{pendingLogs}</span>
               )}
             </button>
           ))}
         </nav>
 
-        {/* actions */}
-        <div className="px-3 py-4 border-t border-white/6 space-y-2">
-          <button onClick={() => setShowAddExpense(true)}
-            className="w-full bg-accent-grad text-white py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition shadow-accent-glow">
-            <Plus size={15}/> Add Expense
+        {/* Actions */}
+        <div style={{ padding: '0.75rem', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <button onClick={() => setShowAddExpense(true)} style={{
+            width: '100%', background: 'var(--accent)', color: 'white',
+            border: 'none', borderRadius: '0.5rem', padding: '0.625rem',
+            fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+            transition: 'opacity 0.2s ease',
+          }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          >
+            <Plus size={14} /> Add Expense
           </button>
-          <button onClick={() => setShowSettle(true)}
-            className="w-full py-2 rounded-xl text-sm font-medium flex items-center justify-center gap-2 transition text-white/50 hover:text-white hover:bg-white/6"
-            style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-            <Check size={15}/> Settle Up
+          <button onClick={() => setShowSettle(true)} style={{
+            width: '100%', background: 'none',
+            border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.5rem',
+            fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-2)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem',
+            transition: 'color 0.15s ease, border-color 0.15s ease',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-2)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+          >
+            <Check size={14} /> Settle Up
           </button>
         </div>
       </aside>
 
       {/* ── MAIN ── */}
-      <main className="ml-64 flex-1 p-8">
-        <div className="mb-7">
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">{group.name}</h1>
-          <p className="text-white/35 text-sm mt-1">{group.description || 'No description'}</p>
+      <main style={{ marginLeft: '256px', flex: 1, padding: '2rem 2.5rem' }}>
+        {/* Group header */}
+        <div style={{ marginBottom: '1.75rem' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)', marginBottom: '0.25rem' }}>
+            {group.name}
+          </h1>
+          <p style={{ fontSize: '0.9rem', color: 'var(--text-3)' }}>{group.description || 'No description'}</p>
+        </div>
+
+        {/* Tab pills */}
+        <div style={{
+          display: 'flex', gap: '0.25rem', marginBottom: '1.5rem',
+          background: 'var(--bg-subtle)', border: '1px solid var(--border)',
+          borderRadius: '9999px', padding: '0.25rem', width: 'fit-content',
+        }}>
+          {TABS.map(t => (
+            <button key={t} onClick={() => setTab(t)} style={tabStyle(t)}>
+              {t}
+              {t === 'Import' && pendingLogs > 0 && (
+                <span style={{
+                  position: 'absolute', top: '-2px', right: '-2px',
+                  width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b',
+                }} />
+              )}
+            </button>
+          ))}
         </div>
 
         {/* ── EXPENSES TAB ── */}
         {tab === 'Expenses' && (
-          <div className="space-y-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {group.expenses.length === 0 ? (
-              <div className="rounded-3xl p-16 text-center"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '2px dashed rgba(255,255,255,0.08)' }}>
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-accent-grad flex items-center justify-center mb-4 shadow-accent-glow">
-                  <Receipt size={24} className="text-white"/>
-                </div>
-                <h3 className="font-bold text-white text-lg mb-2">No expenses yet</h3>
-                <p className="text-white/35 text-sm mb-6">Add your first expense or import a CSV file</p>
-                <div className="flex gap-3 justify-center">
-                  <button onClick={() => setShowAddExpense(true)}
-                    className="bg-accent-grad text-white px-5 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition">
-                    Add Expense
-                  </button>
-                  <button onClick={() => setTab('Import')}
-                    className="text-white/50 px-5 py-2 rounded-xl text-sm font-medium hover:text-white hover:bg-white/6 transition"
-                    style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-                    Import CSV
-                  </button>
-                </div>
-              </div>
+              <EmptyState icon={<Receipt size={22} style={{ color: 'var(--accent)' }} />} title="No expenses yet" desc="Add your first expense or import a CSV file">
+                <button onClick={() => setShowAddExpense(true)} style={{ ...submitBtnStyle, flex: 'none', padding: '0.5rem 1.25rem' }}>
+                  Add Expense
+                </button>
+                <button onClick={() => setTab('Import')} style={{ ...cancelBtnStyle, flex: 'none', padding: '0.5rem 1.25rem' }}>
+                  Import CSV
+                </button>
+              </EmptyState>
             ) : group.expenses.map((exp) => (
-              <div key={exp.id}
-                className="rounded-2xl p-4 transition group"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-                onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.borderColor='rgb(var(--accent)/0.3)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor='rgba(255,255,255,0.07)'; }}>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
-                      style={{ background: 'rgba(255,255,255,0.06)' }}>
-                      <Receipt size={18} className="text-white/40"/>
+              <div key={exp.id} className="expense-row" style={{
+                background: 'var(--card)', border: '1px solid var(--border)',
+                borderRadius: '0.75rem', padding: '1rem',
+                boxShadow: 'var(--shadow)',
+                transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; e.currentTarget.querySelector('.del-btn').style.opacity = '1'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; e.currentTarget.querySelector('.del-btn').style.opacity = '0'; }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      width: '38px', height: '38px', borderRadius: '0.625rem', flexShrink: 0,
+                      background: 'var(--bg-muted)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Receipt size={16} style={{ color: 'var(--text-3)' }} />
                     </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="font-semibold text-white text-sm">{exp.description}</span>
-                        {exp.isSettlement && <span className="text-[10px] bg-green-500/20 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full">Settlement</span>}
-                        <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgb(var(--accent)/0.15)', color: 'rgb(var(--accent))' }}>{exp.splitType}</span>
-                        {exp.currency !== 'INR' && <span className="text-[10px] bg-orange-500/15 text-orange-400 border border-orange-400/20 px-2 py-0.5 rounded-full">USD</span>}
-                        {exp.importRow && <span className="text-[10px] text-white/20 px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }}>Row {exp.importRow}</span>}
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
+                        <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)' }}>{exp.description}</span>
+                        {exp.isSettlement && <Badge color="#22c55e" bg="rgba(34,197,94,0.1)">Settlement</Badge>}
+                        <Badge color="var(--accent)" bg="var(--accent-subtle)">{exp.splitType}</Badge>
+                        {exp.currency !== 'INR' && <Badge color="#f59e0b" bg="rgba(245,158,11,0.1)">USD</Badge>}
                       </div>
-                      <p className="text-xs text-white/40">
-                        Paid by <span className="text-accent font-medium">{exp.paidBy?.displayName || 'Unknown'}</span>
-                        <span className="mx-2 text-white/15">·</span>
+                      <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)' }}>
+                        Paid by <span style={{ color: 'var(--accent)', fontWeight: 500 }}>{exp.paidBy?.displayName || 'Unknown'}</span>
+                        <span style={{ margin: '0 0.375rem', color: 'var(--border-strong)' }}>·</span>
                         {new Date(exp.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
-                      <div className="flex flex-wrap gap-1 mt-2">
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.5rem' }}>
                         {exp.splits.map(s => (
-                          <span key={s.id} className="text-[10px] px-2 py-0.5 rounded-lg text-white/35"
-                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                          <span key={s.id} style={{
+                            fontSize: '0.6875rem', padding: '0.2rem 0.5rem', borderRadius: '0.375rem',
+                            background: 'var(--bg-muted)', color: 'var(--text-3)',
+                            border: '1px solid var(--border)',
+                          }}>
                             {s.member?.displayName || '?'}: ₹{Number(s.amountInr).toFixed(0)}
                           </span>
                         ))}
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 flex-shrink-0 ml-4">
-                    <div className="text-right">
-                      <p className="text-base font-bold text-white">₹{Number(exp.amountInr).toFixed(2)}</p>
-                      {exp.currency !== 'INR' && <p className="text-[11px] text-white/30">${Number(exp.amount).toFixed(2)}</p>}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', flexShrink: 0, marginLeft: '1rem' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text)' }}>₹{Number(exp.amountInr).toFixed(2)}</p>
+                      {exp.currency !== 'INR' && <p style={{ fontSize: '0.6875rem', color: 'var(--text-3)' }}>${Number(exp.amount).toFixed(2)}</p>}
                     </div>
-                    <button onClick={() => deleteExpense(exp.id)}
-                      className="opacity-0 group-hover:opacity-100 text-white/20 hover:text-red-400 transition p-1">
-                      <X size={14}/>
+                    <button className="del-btn" onClick={() => deleteExpense(exp.id)} style={{
+                      opacity: 0, padding: '0.25rem', background: 'none', border: 'none',
+                      color: 'var(--text-3)', cursor: 'pointer', transition: 'color 0.15s ease, opacity 0.15s ease',
+                      borderRadius: '0.375rem',
+                    }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+                      onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
+                    >
+                      <X size={14} />
                     </button>
                   </div>
                 </div>
@@ -286,169 +422,232 @@ export default function GroupDetail() {
 
         {/* ── BALANCES TAB ── */}
         {tab === 'Balances' && balances && (
-          <div className="space-y-5">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
               {balances.members.map((m, i) => (
-                <div key={m.id} onClick={() => fetchBreakdown(m)}
-                  className="rounded-2xl p-5 cursor-pointer transition-all duration-300"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-                  onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.08)'; e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.borderColor='rgb(var(--accent)/0.3)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.transform=''; e.currentTarget.style.borderColor='rgba(255,255,255,0.07)'; }}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                      style={{ background: avatarGrads[i % avatarGrads.length] }}>
+                <div key={m.id} onClick={() => fetchBreakdown(m)} style={{
+                  background: 'var(--card)', border: '1px solid var(--border)',
+                  borderRadius: '0.875rem', padding: '1.125rem',
+                  cursor: 'pointer', boxShadow: 'var(--shadow)',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease',
+                }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.75rem' }}>
+                    <div style={{
+                      width: '34px', height: '34px', borderRadius: '50%',
+                      background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'white', fontSize: '0.875rem', fontWeight: 700,
+                    }}>
                       {(m.displayName || '?')[0].toUpperCase()}
                     </div>
-                    <span className="font-semibold text-white text-sm">{m.displayName}</span>
+                    <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text)' }}>{m.displayName}</span>
                   </div>
-                  <div className={`text-2xl font-extrabold mb-1 ${m.net > 0 ? 'text-emerald-400' : m.net < 0 ? 'text-red-400' : 'text-white/30'}`}>
+                  <div style={{
+                    fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.2rem',
+                    color: m.net > 0 ? '#22c55e' : m.net < 0 ? '#f87171' : 'var(--text-3)',
+                  }}>
                     {m.net > 0 ? '+' : ''}₹{Math.abs(m.net).toFixed(2)}
                   </div>
-                  <p className="text-[11px] text-white/30">
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
                     {m.net > 0 ? 'gets back' : m.net < 0 ? 'owes' : 'settled'}
                   </p>
-                  <p className="text-[11px] text-accent mt-2 opacity-60">Tap for breakdown →</p>
+                  <p style={{ fontSize: '0.6875rem', color: 'var(--accent)', marginTop: '0.5rem', opacity: 0.7 }}>
+                    Tap for breakdown →
+                  </p>
                 </div>
               ))}
             </div>
 
-            {/* Suggested settlements */}
-            <div className="rounded-2xl p-6"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-              <div className="flex items-center gap-2 mb-5">
-                <TrendingUp size={16} className="text-accent"/>
-                <h3 className="font-bold text-white">Suggested Settlements</h3>
+            <div style={{
+              background: 'var(--card)', border: '1px solid var(--border)',
+              borderRadius: '0.875rem', padding: '1.25rem', boxShadow: 'var(--shadow)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <TrendingUp size={15} style={{ color: 'var(--accent)' }} />
+                <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)' }}>Suggested Settlements</h3>
               </div>
               {balances.transactions.length === 0 ? (
-                <div className="text-center py-6">
-                  <div className="text-3xl mb-2">🎉</div>
-                  <p className="text-white/40 font-medium text-sm">All settled up!</p>
+                <div style={{ textAlign: 'center', padding: '1.5rem 0' }}>
+                  <p style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>🎉</p>
+                  <p style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-2)' }}>All settled up!</p>
                 </div>
               ) : balances.transactions.map((t, i) => (
-                <div key={i} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                      style={{ background: avatarGrads[balances.members.findIndex(m => m.id === parseInt(t.from?.id)) % avatarGrads.length] }}>
-                      {(t.from?.displayName||'?')[0].toUpperCase()}
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '0.75rem 0', borderBottom: '1px solid var(--border)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                    <div style={{
+                      width: '26px', height: '26px', borderRadius: '50%',
+                      background: AVATAR_COLORS[balances.members.findIndex(m => m.id === parseInt(t.from?.id)) % AVATAR_COLORS.length],
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'white', fontSize: '0.6875rem', fontWeight: 700,
+                    }}>
+                      {(t.from?.displayName || '?')[0].toUpperCase()}
                     </div>
-                    <span className="text-sm">
-                      <span className="font-semibold text-red-400">{t.from?.displayName}</span>
-                      <span className="text-white/30 mx-2">pays</span>
-                      <span className="font-semibold text-emerald-400">{t.to?.displayName}</span>
+                    <span style={{ fontSize: '0.9rem' }}>
+                      <span style={{ fontWeight: 600, color: '#f87171' }}>{t.from?.displayName}</span>
+                      <span style={{ color: 'var(--text-3)', margin: '0 0.5rem' }}>pays</span>
+                      <span style={{ fontWeight: 600, color: '#22c55e' }}>{t.to?.displayName}</span>
                     </span>
                   </div>
-                  <span className="font-bold text-white">₹{t.amount.toFixed(2)}</span>
+                  <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.9375rem' }}>₹{t.amount.toFixed(2)}</span>
                 </div>
               ))}
             </div>
 
             {/* Breakdown modal */}
             {breakdown && breakdownMember && (
-              <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
-                style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(12px)' }}
-                onClick={() => setBreakdown(null)}>
-                <div className="w-full max-w-lg rounded-3xl p-6 shadow-2xl max-h-[80vh] overflow-y-auto" style={modalBg}
-                  onClick={e => e.stopPropagation()}>
-                  <div className="flex items-center justify-between mb-5">
-                    <h3 className="font-bold text-white">Breakdown · {breakdownMember.displayName}</h3>
-                    <button onClick={() => setBreakdown(null)} className="text-white/30 hover:text-white transition"><X size={18}/></button>
-                  </div>
-                  <div className="space-y-2">
-                    {breakdown.map(item => (
-                      <div key={item.expenseId} className="p-3.5 rounded-2xl"
-                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-white text-sm">{item.description}</span>
-                          <span className={`font-bold text-sm ${item.net > 0 ? 'text-emerald-400' : item.net < 0 ? 'text-red-400' : 'text-white/30'}`}>
-                            {item.net > 0 ? '+' : ''}₹{item.net.toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="text-xs text-white/30 flex gap-4">
-                          <span>{new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
-                          {item.paid > 0 && <span className="text-emerald-400">paid ₹{item.paid.toFixed(2)}</span>}
-                          {item.owes > 0 && <span className="text-red-400">owes ₹{item.owes.toFixed(2)}</span>}
-                        </div>
+              <Modal title={`Breakdown · ${breakdownMember.displayName}`} onClose={() => setBreakdown(null)}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {breakdown.map(item => (
+                    <div key={item.expenseId} style={{
+                      padding: '0.875rem', borderRadius: '0.625rem',
+                      background: 'var(--bg-subtle)', border: '1px solid var(--border)',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text)' }}>{item.description}</span>
+                        <span style={{
+                          fontSize: '0.9rem', fontWeight: 700,
+                          color: item.net > 0 ? '#22c55e' : item.net < 0 ? '#f87171' : 'var(--text-3)',
+                        }}>
+                          {item.net > 0 ? '+' : ''}₹{item.net.toFixed(2)}
+                        </span>
                       </div>
-                    ))}
-                  </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-3)', display: 'flex', gap: '1rem' }}>
+                        <span>{new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                        {item.paid > 0 && <span style={{ color: '#22c55e' }}>paid ₹{item.paid.toFixed(2)}</span>}
+                        {item.owes > 0 && <span style={{ color: '#f87171' }}>owes ₹{item.owes.toFixed(2)}</span>}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
+              </Modal>
             )}
           </div>
         )}
 
         {/* ── SETTLEMENTS TAB ── */}
         {tab === 'Settlements' && (
-          <div className="space-y-3">
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-white/40 text-sm">{settlements.length} settlement{settlements.length !== 1 ? 's' : ''}</p>
-              <button onClick={() => setShowSettle(true)} className="flex items-center gap-1.5 text-accent text-sm font-medium hover:opacity-80 transition">
-                <Plus size={14}/> Record payment
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-3)' }}>
+                {settlements.length} settlement{settlements.length !== 1 ? 's' : ''}
+              </p>
+              <button onClick={() => setShowSettle(true)} style={{
+                display: 'flex', alignItems: 'center', gap: '0.375rem',
+                fontSize: '0.875rem', fontWeight: 500, color: 'var(--accent)',
+                background: 'none', border: 'none', cursor: 'pointer',
+                transition: 'opacity 0.2s ease',
+              }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                <Plus size={14} /> Record payment
               </button>
             </div>
+
             {settlements.length === 0 ? (
-              <div className="rounded-3xl p-12 text-center"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '2px dashed rgba(255,255,255,0.07)' }}>
-                <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-500/20 flex items-center justify-center mb-4 border border-emerald-500/20">
-                  <ArrowLeftRight size={22} className="text-emerald-400"/>
-                </div>
-                <h3 className="font-bold text-white mb-2">No settlements yet</h3>
-                <p className="text-white/35 text-sm">Record a payment when someone settles their debt</p>
-              </div>
-            ) : settlements.map(s => (
-              <div key={s.id} className="rounded-2xl p-4 flex items-center justify-between"
-                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center border border-emerald-500/20">
-                    <ArrowLeftRight size={17} className="text-emerald-400"/>
+              <EmptyState icon={<ArrowLeftRight size={22} style={{ color: '#22c55e' }} />} title="No settlements yet" desc="Record a payment when someone settles their debt" />
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {settlements.map(s => (
+                  <div key={s.id} style={{
+                    background: 'var(--card)', border: '1px solid var(--border)',
+                    borderRadius: '0.75rem', padding: '1rem',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    boxShadow: 'var(--shadow)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <div style={{
+                        width: '38px', height: '38px', borderRadius: '0.625rem',
+                        background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <ArrowLeftRight size={16} style={{ color: '#22c55e' }} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text)' }}>
+                          <span style={{ color: '#f87171' }}>{s.paidBy?.displayName}</span>
+                          <span style={{ color: 'var(--text-3)', margin: '0 0.375rem' }}>→</span>
+                          <span style={{ color: '#22c55e' }}>{s.paidTo?.displayName}</span>
+                        </p>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                          {new Date(s.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {s.notes ? ` · ${s.notes}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: '1.0625rem', fontWeight: 700, color: '#22c55e' }}>₹{Number(s.amount).toFixed(2)}</span>
                   </div>
-                  <div>
-                    <p className="font-medium text-sm">
-                      <span className="text-red-400">{s.paidBy?.displayName}</span>
-                      <span className="text-white/30 mx-2">→</span>
-                      <span className="text-emerald-400">{s.paidTo?.displayName}</span>
-                    </p>
-                    <p className="text-xs text-white/30">
-                      {new Date(s.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      {s.notes ? ` · ${s.notes}` : ''}
-                    </p>
-                  </div>
-                </div>
-                <span className="font-bold text-emerald-400 text-lg">₹{Number(s.amount).toFixed(2)}</span>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
 
         {/* ── MEMBERS TAB ── */}
         {tab === 'Members' && (
-          <div className="rounded-2xl overflow-hidden"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-            <div className="px-6 py-4 border-b border-white/6">
-              <h3 className="font-bold text-white flex items-center gap-2"><Users size={16}/> Group Members</h3>
-              <p className="text-xs text-white/30 mt-0.5">Join and leave dates determine which expenses each member shares</p>
+          <div style={{
+            background: 'var(--card)', border: '1px solid var(--border)',
+            borderRadius: '0.875rem', boxShadow: 'var(--shadow)', overflow: 'hidden',
+          }}>
+            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border)' }}>
+              <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Users size={15} style={{ color: 'var(--accent)' }} /> Group Members
+              </h3>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: '0.25rem' }}>
+                Join and leave dates determine which expenses each member shares
+              </p>
             </div>
-            <div className="divide-y divide-white/5">
+            <div>
               {group.memberships.map((m, i) => (
-                <div key={m.id} className="px-6 py-4 flex items-center justify-between hover:bg-white/3 transition">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                      style={{ background: avatarGrads[i % avatarGrads.length] }}>
+                <div key={m.id} style={{
+                  padding: '0.875rem 1.25rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  borderBottom: i < group.memberships.length - 1 ? '1px solid var(--border)' : 'none',
+                  transition: 'background 0.15s ease',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-subtle)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                    <div style={{
+                      width: '34px', height: '34px', borderRadius: '50%',
+                      background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'white', fontSize: '0.875rem', fontWeight: 700,
+                    }}>
                       {(m.displayName || m.user?.username || '?')[0].toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-semibold text-white text-sm">{m.displayName || m.user?.username}</p>
-                      <p className="text-xs text-white/30">@{m.user?.username}</p>
+                      <p style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text)' }}>
+                        {m.displayName || m.user?.username}
+                      </p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>@{m.user?.username}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-white/30">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-3)' }}>
                     <span>Joined {new Date(m.joinedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                     {m.leftAt ? (
-                      <span className="bg-orange-500/15 text-orange-400 border border-orange-400/20 px-2.5 py-1 rounded-full font-medium">
+                      <span style={{
+                        background: 'rgba(245,158,11,0.1)', color: '#f59e0b',
+                        border: '1px solid rgba(245,158,11,0.2)', padding: '0.2rem 0.625rem',
+                        borderRadius: '9999px', fontWeight: 500,
+                      }}>
                         Left {new Date(m.leftAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                       </span>
                     ) : (
-                      <span className="bg-emerald-500/15 text-emerald-400 border border-emerald-400/20 px-2.5 py-1 rounded-full font-medium">Active</span>
+                      <span style={{
+                        background: 'rgba(34,197,94,0.1)', color: '#22c55e',
+                        border: '1px solid rgba(34,197,94,0.2)', padding: '0.2rem 0.625rem',
+                        borderRadius: '9999px', fontWeight: 500,
+                      }}>
+                        Active
+                      </span>
                     )}
                   </div>
                 </div>
@@ -459,33 +658,58 @@ export default function GroupDetail() {
 
         {/* ── IMPORT TAB ── */}
         {tab === 'Import' && (
-          <div className="space-y-5">
-            <div className="rounded-3xl p-10 text-center transition"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '2px dashed rgb(var(--accent)/0.3)' }}>
-              <div className="w-14 h-14 mx-auto rounded-2xl bg-accent-grad flex items-center justify-center mb-4 shadow-accent-glow">
-                <Upload size={22} className="text-white"/>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div style={{
+              background: 'var(--card)', border: '2px dashed var(--border)',
+              borderRadius: '0.875rem', padding: '3rem 2rem', textAlign: 'center',
+              boxShadow: 'var(--shadow)',
+            }}>
+              <div style={{
+                width: '48px', height: '48px', borderRadius: '0.75rem',
+                background: 'var(--accent-subtle)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 1rem',
+              }}>
+                <Upload size={20} style={{ color: 'var(--accent)' }} />
               </div>
-              <h3 className="font-bold text-white mb-1">Import CSV File</h3>
-              <p className="text-white/35 text-sm mb-6">Upload <strong className="text-white/60">expenses_export.csv</strong> — anomalies detected automatically</p>
-              <label className={`inline-flex items-center gap-2 cursor-pointer ${uploading ? 'opacity-50 pointer-events-none' : ''} bg-accent-grad text-white px-6 py-3 rounded-2xl text-sm font-semibold hover:opacity-90 transition shadow-accent-glow`}>
-                <Upload size={15}/>
+              <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.375rem' }}>Import CSV File</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-2)', marginBottom: '1.5rem' }}>
+                Upload <strong>expenses_export.csv</strong> — anomalies detected automatically
+              </p>
+              <label style={{
+                display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                background: 'var(--accent)', color: 'white',
+                padding: '0.625rem 1.25rem', borderRadius: '0.625rem',
+                fontSize: '0.9rem', fontWeight: 600, cursor: uploading ? 'not-allowed' : 'pointer',
+                opacity: uploading ? 0.6 : 1, transition: 'opacity 0.2s ease',
+              }}
+                onMouseEnter={e => { if (!uploading) e.currentTarget.style.opacity = '0.88'; }}
+                onMouseLeave={e => { if (!uploading) e.currentTarget.style.opacity = '1'; }}
+              >
+                <Upload size={14} />
                 {uploading ? 'Importing...' : 'Choose CSV File'}
-                <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" disabled={uploading}/>
+                <input type="file" accept=".csv" onChange={handleCSVUpload} style={{ display: 'none' }} disabled={uploading} />
               </label>
             </div>
 
             {importResult && (
-              <div className="rounded-2xl p-5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <h3 className="font-bold text-white mb-4">Import Report</h3>
-                <div className="grid grid-cols-3 gap-3">
+              <div style={{
+                background: 'var(--card)', border: '1px solid var(--border)',
+                borderRadius: '0.875rem', padding: '1.25rem', boxShadow: 'var(--shadow)',
+              }}>
+                <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)', marginBottom: '1rem' }}>Import Report</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
                   {[
-                    [importResult.imported, 'Imported', 'text-emerald-400', 'bg-emerald-500/10 border-emerald-500/20'],
-                    [importResult.skipped, 'Skipped', 'text-red-400', 'bg-red-500/10 border-red-500/20'],
-                    [importResult.anomalies, 'Anomalies', 'text-amber-400', 'bg-amber-500/10 border-amber-500/20'],
-                  ].map(([val, label, tc, bg]) => (
-                    <div key={label} className={`text-center rounded-xl p-4 border ${bg}`}>
-                      <div className={`text-3xl font-extrabold ${tc}`}>{val}</div>
-                      <div className="text-xs text-white/35 mt-1">{label}</div>
+                    [importResult.imported, 'Imported', '#22c55e', 'rgba(34,197,94,0.1)', 'rgba(34,197,94,0.2)'],
+                    [importResult.skipped, 'Skipped', '#f87171', 'rgba(248,113,113,0.1)', 'rgba(248,113,113,0.2)'],
+                    [importResult.anomalies, 'Anomalies', '#f59e0b', 'rgba(245,158,11,0.1)', 'rgba(245,158,11,0.2)'],
+                  ].map(([val, label, color, bg, border]) => (
+                    <div key={label} style={{
+                      textAlign: 'center', borderRadius: '0.625rem',
+                      padding: '1rem', background: bg, border: `1px solid ${border}`,
+                    }}>
+                      <div style={{ fontSize: '2rem', fontWeight: 700, color }}>{val}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-3)', marginTop: '0.25rem' }}>{label}</div>
                     </div>
                   ))}
                 </div>
@@ -493,31 +717,43 @@ export default function GroupDetail() {
             )}
 
             {importLogs.length > 0 && (
-              <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
-                <div className="px-5 py-4 border-b border-white/6 flex items-center justify-between">
-                  <h3 className="font-bold text-white">Anomaly Log</h3>
-                  <span className="text-xs text-white/30">{importLogs.length} issues</span>
+              <div style={{
+                background: 'var(--card)', border: '1px solid var(--border)',
+                borderRadius: '0.875rem', overflow: 'hidden', boxShadow: 'var(--shadow)',
+              }}>
+                <div style={{
+                  padding: '0.875rem 1.25rem', borderBottom: '1px solid var(--border)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                }}>
+                  <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)' }}>Anomaly Log</h3>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{importLogs.length} issues</span>
                 </div>
-                <div className="max-h-96 overflow-y-auto divide-y divide-white/5">
-                  {importLogs.map(log => (
-                    <div key={log.id} className="px-5 py-3 flex items-start gap-3">
-                      <div className="mt-0.5 flex-shrink-0">
-                        {log.severity === 'error' ? <X size={13} className="text-red-400"/> :
-                         log.severity === 'warning' ? <AlertTriangle size={13} className="text-amber-400"/> :
-                         <Info size={13} className="text-blue-400"/>}
+                <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
+                  {importLogs.map((log, i) => (
+                    <div key={log.id} style={{
+                      padding: '0.75rem 1.25rem',
+                      display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
+                      borderBottom: i < importLogs.length - 1 ? '1px solid var(--border)' : 'none',
+                    }}>
+                      <div style={{ marginTop: '2px', flexShrink: 0 }}>
+                        {log.severity === 'error' ? <X size={13} style={{ color: '#f87171' }} /> :
+                          log.severity === 'warning' ? <AlertTriangle size={13} style={{ color: '#f59e0b' }} /> :
+                            <Info size={13} style={{ color: '#60a5fa' }} />}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                          <span className="text-xs font-semibold text-white/60">Row {log.rowNumber}</span>
-                          <span className="text-white/20">·</span>
-                          <span className="text-xs text-white/40">{log.issueType.replace(/_/g, ' ')}</span>
-                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ml-auto ${
-                            log.severity === 'error' ? 'bg-red-500/15 text-red-400' :
-                            log.severity === 'warning' ? 'bg-amber-500/15 text-amber-400' : 'bg-blue-500/15 text-blue-400'
-                          }`}>{log.severity}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.2rem' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-2)' }}>Row {log.rowNumber}</span>
+                          <span style={{ color: 'var(--border-strong)' }}>·</span>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{log.issueType.replace(/_/g, ' ')}</span>
+                          <span style={{
+                            fontSize: '0.625rem', padding: '0.15rem 0.4rem', borderRadius: '9999px',
+                            fontWeight: 600, marginLeft: 'auto',
+                            background: log.severity === 'error' ? 'rgba(248,113,113,0.1)' : log.severity === 'warning' ? 'rgba(245,158,11,0.1)' : 'rgba(96,165,250,0.1)',
+                            color: log.severity === 'error' ? '#f87171' : log.severity === 'warning' ? '#f59e0b' : '#60a5fa',
+                          }}>{log.severity}</span>
                         </div>
-                        <p className="text-xs text-white/35">{log.issueDescription}</p>
-                        {log.actionTaken && <p className="text-xs text-white/20 mt-0.5 italic">→ {log.actionTaken}</p>}
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{log.issueDescription}</p>
+                        {log.actionTaken && <p style={{ fontSize: '0.75rem', color: 'var(--text-3)', fontStyle: 'italic', marginTop: '0.15rem' }}>→ {log.actionTaken}</p>}
                       </div>
                     </div>
                   ))}
@@ -530,110 +766,121 @@ export default function GroupDetail() {
 
       {/* ── ADD EXPENSE MODAL ── */}
       {showAddExpense && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(12px)' }}>
-          <div className="w-full max-w-lg rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto" style={modalBg}>
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-lg font-bold text-white">Add Expense</h2>
-                <p className="text-white/30 text-xs mt-0.5">Split fairly among active members</p>
-              </div>
-              <button onClick={() => setShowAddExpense(false)} className="text-white/30 hover:text-white transition"><X size={18}/></button>
+        <Modal title="Add Expense" subtitle="Split fairly among active members" onClose={() => setShowAddExpense(false)}>
+          <form onSubmit={addExpense} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+            <FieldInput label="Description *" required placeholder="e.g. Dinner at Barbeque Nation"
+              value={expenseForm.description} onChange={e => setExpenseForm({ ...expenseForm, description: e.target.value })} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <FieldInput label="Amount *" required type="number" step="0.01" min="0.01" placeholder="0.00"
+                value={expenseForm.amount} onChange={e => setExpenseForm({ ...expenseForm, amount: e.target.value })} />
+              <FieldSelect label="Currency"
+                value={expenseForm.currency} onChange={e => setExpenseForm({ ...expenseForm, currency: e.target.value })}>
+                <option value="INR">INR (₹)</option>
+                <option value="USD">USD ($)</option>
+              </FieldSelect>
             </div>
-            <form onSubmit={addExpense} className="space-y-4">
-              <DarkInput label="Description *" required placeholder="e.g. Dinner at Barbeque Nation"
-                value={expenseForm.description} onChange={e => setExpenseForm({ ...expenseForm, description: e.target.value })} />
-              <div className="grid grid-cols-2 gap-3">
-                <DarkInput label="Amount *" required type="number" step="0.01" min="0.01" placeholder="0.00"
-                  value={expenseForm.amount} onChange={e => setExpenseForm({ ...expenseForm, amount: e.target.value })} />
-                <DarkSelect label="Currency"
-                  value={expenseForm.currency} onChange={e => setExpenseForm({ ...expenseForm, currency: e.target.value })}>
-                  <option value="INR">INR (₹)</option>
-                  <option value="USD">USD ($)</option>
-                </DarkSelect>
+            {expenseForm.currency === 'USD' && expenseForm.amount && (
+              <div style={{
+                borderRadius: '0.5rem', padding: '0.625rem 0.875rem', fontSize: '0.875rem',
+                background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', color: '#f59e0b',
+              }}>
+                ${expenseForm.amount} × ₹{expenseForm.exchangeRate} = <strong>₹{(parseFloat(expenseForm.amount || 0) * expenseForm.exchangeRate).toFixed(2)}</strong>
               </div>
-              {expenseForm.currency === 'USD' && expenseForm.amount && (
-                <div className="rounded-xl p-3 text-sm" style={{ background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.2)', color: '#fb923c' }}>
-                  💱 ${expenseForm.amount} × ₹{expenseForm.exchangeRate} = <strong>₹{(parseFloat(expenseForm.amount || 0) * expenseForm.exchangeRate).toFixed(2)}</strong>
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-3">
-                <DarkSelect label="Paid by *" required
-                  value={expenseForm.paidById} onChange={e => setExpenseForm({ ...expenseForm, paidById: e.target.value })}>
-                  <option value="">Select member</option>
-                  {activeMembers.map(m => <option key={m.id} value={m.id}>{m.displayName || m.user?.username}</option>)}
-                </DarkSelect>
-                <DarkSelect label="Split type"
-                  value={expenseForm.splitType} onChange={e => setExpenseForm({ ...expenseForm, splitType: e.target.value })}>
-                  <option value="equal">Equal</option>
-                  <option value="exact">Exact amounts</option>
-                  <option value="percentage">Percentage</option>
-                  <option value="shares">By shares</option>
-                </DarkSelect>
-              </div>
-              <DarkInput label="Date *" type="date" required
-                value={expenseForm.date} onChange={e => setExpenseForm({ ...expenseForm, date: e.target.value })} />
-              <DarkInput label="Notes" placeholder="Optional notes"
-                value={expenseForm.notes} onChange={e => setExpenseForm({ ...expenseForm, notes: e.target.value })} />
-              <div className="flex gap-3 pt-1">
-                <button type="button" onClick={() => setShowAddExpense(false)}
-                  className="flex-1 py-3 rounded-xl text-sm font-medium text-white/40 hover:text-white transition"
-                  style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Cancel</button>
-                <button type="submit" className="flex-1 bg-accent-grad text-white py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-accent-glow">
-                  Add Expense
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <FieldSelect label="Paid by *" required
+                value={expenseForm.paidById} onChange={e => setExpenseForm({ ...expenseForm, paidById: e.target.value })}>
+                <option value="">Select member</option>
+                {activeMembers.map(m => <option key={m.id} value={m.id}>{m.displayName || m.user?.username}</option>)}
+              </FieldSelect>
+              <FieldSelect label="Split type"
+                value={expenseForm.splitType} onChange={e => setExpenseForm({ ...expenseForm, splitType: e.target.value })}>
+                <option value="equal">Equal</option>
+                <option value="exact">Exact amounts</option>
+                <option value="percentage">Percentage</option>
+                <option value="shares">By shares</option>
+              </FieldSelect>
+            </div>
+            <FieldInput label="Date *" type="date" required
+              value={expenseForm.date} onChange={e => setExpenseForm({ ...expenseForm, date: e.target.value })} />
+            <FieldInput label="Notes" placeholder="Optional notes"
+              value={expenseForm.notes} onChange={e => setExpenseForm({ ...expenseForm, notes: e.target.value })} />
+            <div style={modalBtnRow}>
+              <button type="button" onClick={() => setShowAddExpense(false)} style={cancelBtnStyle}>Cancel</button>
+              <button type="submit" style={submitBtnStyle}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >Add Expense</button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* ── SETTLE MODAL ── */}
       {showSettle && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(12px)' }}>
-          <div className="w-full max-w-md rounded-3xl p-6 shadow-2xl" style={modalBg}>
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-lg font-bold text-white">Record Settlement</h2>
-                <p className="text-white/30 text-xs mt-0.5">Log a payment between members</p>
-              </div>
-              <button onClick={() => setShowSettle(false)} className="text-white/30 hover:text-white transition"><X size={18}/></button>
+        <Modal title="Record Settlement" subtitle="Log a payment between members" onClose={() => setShowSettle(false)}>
+          <form onSubmit={addSettlement} style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <FieldSelect label="Who paid?" required
+                value={settleForm.paidById} onChange={e => setSettleForm({ ...settleForm, paidById: e.target.value })}>
+                <option value="">Select</option>
+                {group.memberships.map(m => <option key={m.id} value={m.id}>{m.displayName || m.user?.username}</option>)}
+              </FieldSelect>
+              <FieldSelect label="Who received?" required
+                value={settleForm.paidToId} onChange={e => setSettleForm({ ...settleForm, paidToId: e.target.value })}>
+                <option value="">Select</option>
+                {group.memberships.map(m => <option key={m.id} value={m.id}>{m.displayName || m.user?.username}</option>)}
+              </FieldSelect>
             </div>
-            <form onSubmit={addSettlement} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <DarkSelect label="Who paid?" required
-                  value={settleForm.paidById} onChange={e => setSettleForm({ ...settleForm, paidById: e.target.value })}>
-                  <option value="">Select</option>
-                  {group.memberships.map(m => <option key={m.id} value={m.id}>{m.displayName || m.user?.username}</option>)}
-                </DarkSelect>
-                <DarkSelect label="Who received?" required
-                  value={settleForm.paidToId} onChange={e => setSettleForm({ ...settleForm, paidToId: e.target.value })}>
-                  <option value="">Select</option>
-                  {group.memberships.map(m => <option key={m.id} value={m.id}>{m.displayName || m.user?.username}</option>)}
-                </DarkSelect>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <DarkInput label="Amount (₹)" required type="number" step="0.01" min="0.01" placeholder="0.00"
-                  value={settleForm.amount} onChange={e => setSettleForm({ ...settleForm, amount: e.target.value })} />
-                <DarkInput label="Date" type="date"
-                  value={settleForm.date} onChange={e => setSettleForm({ ...settleForm, date: e.target.value })} />
-              </div>
-              <DarkInput label="Notes" placeholder="e.g. UPI transfer"
-                value={settleForm.notes} onChange={e => setSettleForm({ ...settleForm, notes: e.target.value })} />
-              <div className="flex gap-3">
-                <button type="button" onClick={() => setShowSettle(false)}
-                  className="flex-1 py-3 rounded-xl text-sm font-medium text-white/40 hover:text-white transition"
-                  style={{ border: '1px solid rgba(255,255,255,0.1)' }}>Cancel</button>
-                <button type="submit"
-                  className="flex-1 bg-accent-grad text-white py-3 rounded-xl text-sm font-semibold hover:opacity-90 transition shadow-accent-glow">
-                  Record Payment
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+              <FieldInput label="Amount (₹)" required type="number" step="0.01" min="0.01" placeholder="0.00"
+                value={settleForm.amount} onChange={e => setSettleForm({ ...settleForm, amount: e.target.value })} />
+              <FieldInput label="Date" type="date"
+                value={settleForm.date} onChange={e => setSettleForm({ ...settleForm, date: e.target.value })} />
+            </div>
+            <FieldInput label="Notes" placeholder="e.g. UPI transfer"
+              value={settleForm.notes} onChange={e => setSettleForm({ ...settleForm, notes: e.target.value })} />
+            <div style={modalBtnRow}>
+              <button type="button" onClick={() => setShowSettle(false)} style={cancelBtnStyle}>Cancel</button>
+              <button type="submit" style={submitBtnStyle}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >Record Payment</button>
+            </div>
+          </form>
+        </Modal>
       )}
+    </div>
+  );
+}
+
+/* ── Small helpers ── */
+function Badge({ color, bg, children }) {
+  return (
+    <span style={{
+      fontSize: '0.6875rem', padding: '0.15rem 0.5rem', borderRadius: '9999px',
+      color, background: bg, fontWeight: 500,
+    }}>{children}</span>
+  );
+}
+
+function EmptyState({ icon, title, desc, children }) {
+  return (
+    <div style={{
+      borderRadius: '0.875rem', padding: '3.5rem 2rem', textAlign: 'center',
+      background: 'var(--bg-subtle)', border: '2px dashed var(--border)',
+    }}>
+      <div style={{
+        width: '48px', height: '48px', borderRadius: '0.75rem',
+        background: 'var(--bg-muted)', border: '1px solid var(--border)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        margin: '0 auto 0.875rem',
+      }}>
+        {icon}
+      </div>
+      <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.375rem' }}>{title}</h3>
+      <p style={{ fontSize: '0.875rem', color: 'var(--text-2)', marginBottom: children ? '1.25rem' : 0 }}>{desc}</p>
+      {children && <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>{children}</div>}
     </div>
   );
 }

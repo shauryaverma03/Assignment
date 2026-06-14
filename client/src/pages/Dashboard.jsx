@@ -3,16 +3,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Users, Receipt, Wallet, ArrowRight, LogOut, Home, Zap, X } from 'lucide-react';
+import { Plus, Users, Receipt, Wallet, ArrowRight, LogOut, Home, X } from 'lucide-react';
+import Logo from '../components/Logo';
 
-const avatarGrads = [
-  'linear-gradient(135deg,#6366f1,#d946ef)',
-  'linear-gradient(135deg,#10b981,#06b6d4)',
-  'linear-gradient(135deg,#f97316,#f43f5e)',
-  'linear-gradient(135deg,#8b5cf6,#ec4899)',
-  'linear-gradient(135deg,#2563eb,#06b6d4)',
-  'linear-gradient(135deg,#f43f5e,#fb7185)',
-];
+const AVATAR_COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ec4899', '#3b82f6', '#8b5cf6'];
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -22,7 +23,6 @@ export default function Dashboard() {
   const [form, setForm] = useState({ name: '', description: '' });
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({ totalGroups: 0, totalExpenses: 0, totalMembers: 0 });
-  const [hovered, setHovered] = useState(null);
 
   const fetchGroups = async () => {
     try {
@@ -56,85 +56,110 @@ export default function Dashboard() {
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  // 3D tilt on card
-  const handleTilt = (e, id) => {
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    card.style.transform = `perspective(700px) rotateX(${-y * 8}deg) rotateY(${x * 8}deg) scale(1.025)`;
-    card.style.boxShadow = `${-x*24}px ${-y*18}px 50px rgba(0,0,0,0.28), 0 0 40px rgb(var(--accent)/0.18)`;
-  };
-  const resetTilt = (e) => {
-    e.currentTarget.style.transform = '';
-    e.currentTarget.style.boxShadow = '';
-  };
-
   return (
-    <div className="min-h-screen flex" style={{ background: '#0d0d12' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--bg)' }}>
 
       {/* ── SIDEBAR ── */}
-      <aside className="w-64 min-h-screen fixed left-0 top-0 flex flex-col z-40"
-        style={{ background: 'rgba(255,255,255,0.03)', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
-
+      <aside style={{
+        width: '256px', minHeight: '100vh', position: 'fixed', left: 0, top: 0,
+        display: 'flex', flexDirection: 'column', zIndex: 40,
+        background: 'var(--bg-subtle)', borderRight: '1px solid var(--border)',
+      }}>
         {/* Logo */}
-        <div className="px-5 py-5 border-b border-white/6">
-          <Link to="/dashboard" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-xl bg-accent-grad flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="white" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M7 7h10M7 7l3-3M7 7l3 3"/><path d="M17 17H7M17 17l-3 3M17 17l-3-3"/>
-              </svg>
-            </div>
-            <span className="font-bold text-white text-lg tracking-tight">Split<span className="text-accent-grad">wise</span></span>
+        <div style={{ padding: '1.25rem 1.25rem', borderBottom: '1px solid var(--border)' }}>
+          <Link to="/dashboard" style={{ textDecoration: 'none' }}>
+            <Logo />
           </Link>
         </div>
 
-        {/* Groups list */}
-        <div className="flex-1 px-3 py-4 overflow-y-auto">
-          <p className="text-[10px] font-bold tracking-widest uppercase text-white/25 px-2 mb-3">My Groups</p>
-          <div className="space-y-0.5">
+        {/* Nav */}
+        <div style={{ flex: 1, padding: '1rem 0.75rem', overflowY: 'auto' }}>
+          <p style={{
+            fontSize: '0.625rem', fontWeight: 700, letterSpacing: '0.1em',
+            textTransform: 'uppercase', color: 'var(--text-3)',
+            padding: '0 0.625rem', marginBottom: '0.5rem',
+          }}>My Groups</p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
             {groups.map((g, i) => (
-              <Link key={g.id} to={`/groups/${g.id}`}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition group"
-                style={{ color: 'rgba(255,255,255,0.6)' }}
-                onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.06)'; e.currentTarget.style.color='white'; }}
-                onMouseLeave={e => { e.currentTarget.style.background=''; e.currentTarget.style.color='rgba(255,255,255,0.6)'; }}>
-                <span className="w-8 h-8 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                  style={{ background: avatarGrads[i % avatarGrads.length] }}>
+              <Link key={g.id} to={`/groups/${g.id}`} style={{
+                display: 'flex', alignItems: 'center', gap: '0.625rem',
+                padding: '0.5rem 0.625rem', borderRadius: '0.5rem',
+                textDecoration: 'none', color: 'var(--text-2)',
+                transition: 'background 0.15s ease, color 0.15s ease',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-muted)'; e.currentTarget.style.color = 'var(--text)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-2)'; }}
+              >
+                <span style={{
+                  width: '30px', height: '30px', borderRadius: '0.5rem', flexShrink: 0,
+                  background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'white', fontSize: '0.75rem', fontWeight: 700,
+                }}>
                   {g.name[0].toUpperCase()}
                 </span>
-                <div className="min-w-0">
-                  <p className="font-medium text-sm truncate">{g.name}</p>
-                  <p className="text-[11px] text-white/30">{g._count?.expenses || 0} expenses</p>
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: '0.875rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {g.name}
+                  </p>
+                  <p style={{ fontSize: '0.6875rem', color: 'var(--text-3)' }}>{g._count?.expenses || 0} expenses</p>
                 </div>
               </Link>
             ))}
           </div>
-          <button onClick={() => setShowCreate(true)}
-            className="mt-3 w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm transition"
-            style={{ color: 'rgba(255,255,255,0.3)', border: '1px dashed rgba(255,255,255,0.12)' }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor='rgb(var(--accent)/0.5)'; e.currentTarget.style.color='rgb(var(--accent))'; e.currentTarget.style.background='rgb(var(--accent)/0.06)'; }}
-            onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.12)'; e.currentTarget.style.color='rgba(255,255,255,0.3)'; e.currentTarget.style.background=''; }}>
+
+          <button onClick={() => setShowCreate(true)} style={{
+            marginTop: '0.625rem', width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.5rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.875rem',
+            color: 'var(--text-3)', background: 'none',
+            border: '1px dashed var(--border)', cursor: 'pointer',
+            transition: 'border-color 0.2s ease, color 0.2s ease, background 0.2s ease',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.background = 'var(--accent-subtle)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-3)'; e.currentTarget.style.background = 'none'; }}
+          >
             <Plus size={14} /> New Group
           </button>
         </div>
 
         {/* Bottom */}
-        <div className="px-3 py-4 border-t border-white/6 space-y-1">
-          <Link to="/" className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm text-white/40 hover:text-white hover:bg-white/5 transition w-full">
+        <div style={{ padding: '0.75rem', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <Link to="/" style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            padding: '0.5rem 0.625rem', borderRadius: '0.5rem',
+            fontSize: '0.875rem', color: 'var(--text-3)',
+            textDecoration: 'none',
+            transition: 'background 0.15s ease, color 0.15s ease',
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-muted)'; e.currentTarget.style.color = 'var(--text)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-3)'; }}
+          >
             <Home size={15} /> Home
           </Link>
-          <div className="flex items-center justify-between px-3 py-2">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-accent-grad flex items-center justify-center text-white text-sm font-bold shadow-accent-glow">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.625rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+              <div style={{
+                width: '30px', height: '30px', borderRadius: '50%',
+                background: 'var(--accent)', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', color: 'white', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0,
+              }}>
                 {user?.username?.[0]?.toUpperCase()}
               </div>
               <div>
-                <p className="text-sm font-medium text-white">{user?.username}</p>
-                <p className="text-[10px] text-white/30">Free plan</p>
+                <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text)' }}>{user?.username}</p>
+                <p style={{ fontSize: '0.6875rem', color: 'var(--text-3)' }}>Free plan</p>
               </div>
             </div>
-            <button onClick={handleLogout} className="text-white/30 hover:text-red-400 transition p-1" title="Log out">
+            <button onClick={handleLogout} style={{
+              padding: '0.375rem', background: 'none', border: 'none',
+              color: 'var(--text-3)', cursor: 'pointer', borderRadius: '0.375rem',
+              transition: 'color 0.2s ease',
+            }}
+              onMouseEnter={e => e.currentTarget.style.color = '#f87171'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--text-3)'}
+              title="Log out"
+            >
               <LogOut size={15} />
             </button>
           </div>
@@ -142,130 +167,169 @@ export default function Dashboard() {
       </aside>
 
       {/* ── MAIN ── */}
-      <main className="ml-64 flex-1 p-8 overflow-y-auto">
+      <main style={{ marginLeft: '256px', flex: 1, padding: '2rem 2.5rem', overflowY: 'auto' }}>
 
-        {/* Hero banner */}
-        <div className="relative rounded-3xl overflow-hidden mb-8 p-8"
-          style={{
-            background: 'linear-gradient(135deg, rgb(var(--accent)/0.15), rgb(var(--accent-2)/0.1))',
-            border: '1px solid rgba(255,255,255,0.08)',
+        {/* Header */}
+        <div style={{ marginBottom: '2rem' }}>
+          <h1 style={{
+            fontSize: '1.625rem', fontWeight: 700, letterSpacing: '-0.02em',
+            color: 'var(--text)', marginBottom: '0.25rem',
           }}>
-          {/* orbs */}
-          <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full blur-3xl opacity-40 pointer-events-none"
-            style={{ background: 'rgb(var(--accent))' }}/>
-          <div className="absolute -bottom-10 left-10 w-32 h-32 rounded-full blur-3xl opacity-20 pointer-events-none"
-            style={{ background: 'rgb(var(--accent-2))' }}/>
-          <div className="relative flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <div className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full mb-3"
-                style={{ background: 'rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}>
-                <Zap size={11}/> Overview
-              </div>
-              <h1 className="text-3xl font-extrabold text-white tracking-tight mb-1">
-                Hey, <span className="text-accent-grad">{user?.username}</span> 👋
-              </h1>
-              <p className="text-white/50 text-sm">Here's what's happening across your groups.</p>
-            </div>
-            <button onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 font-semibold text-sm px-5 py-2.5 rounded-2xl transition hover:scale-105"
-              style={{ background: 'rgba(255,255,255,0.12)', color: 'white', border: '1px solid rgba(255,255,255,0.15)' }}
-              onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.2)'}
-              onMouseLeave={e => e.currentTarget.style.background='rgba(255,255,255,0.12)'}>
-              <Plus size={16}/> New Group
-            </button>
-          </div>
+            {getGreeting()}, {user?.username}
+          </h1>
+          <p style={{ fontSize: '0.9375rem', color: 'var(--text-2)' }}>
+            Here's what's happening across your groups.
+          </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        {/* Stat cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
           {[
-            { label: 'Groups', value: stats.totalGroups, sub: 'Active', Icon: Users, grad: 'from-violet-500 to-purple-600' },
-            { label: 'Expenses', value: stats.totalExpenses, sub: 'Total logged', Icon: Receipt, grad: 'from-orange-500 to-rose-500' },
-            { label: 'People', value: stats.totalMembers, sub: 'In your network', Icon: Wallet, grad: 'from-emerald-500 to-teal-500' },
-          ].map(({ label, value, sub, Icon, grad }) => (
-            <div key={label}
-              className="rounded-2xl p-5 transition-all duration-300 cursor-default"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-              onMouseEnter={e => { e.currentTarget.style.background='rgba(255,255,255,0.07)'; e.currentTarget.style.transform='translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background='rgba(255,255,255,0.04)'; e.currentTarget.style.transform=''; }}>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-white/40 font-medium">{label}</span>
-                <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center shadow-lg`}>
-                  <Icon size={17} className="text-white"/>
+            { label: 'Groups', value: stats.totalGroups, sub: 'Active', Icon: Users },
+            { label: 'Expenses', value: stats.totalExpenses, sub: 'Total logged', Icon: Receipt },
+            { label: 'People', value: stats.totalMembers, sub: 'In your network', Icon: Wallet },
+          ].map(({ label, value, sub, Icon }) => (
+            <div key={label} style={{
+              background: 'var(--card)', border: '1px solid var(--border)',
+              borderRadius: '0.875rem', padding: '1.25rem',
+              boxShadow: 'var(--shadow)',
+              transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+              cursor: 'default',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
+                <span style={{ fontSize: '0.8125rem', color: 'var(--text-3)', fontWeight: 500 }}>{label}</span>
+                <div style={{
+                  width: '34px', height: '34px', borderRadius: '0.5rem',
+                  background: 'var(--accent-subtle)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Icon size={16} style={{ color: 'var(--accent)' }} />
                 </div>
               </div>
-              <p className="text-4xl font-extrabold text-white tracking-tight">{value}</p>
-              <p className="text-xs text-white/30 mt-1">{sub}</p>
+              <p style={{ fontSize: '2.25rem', fontWeight: 700, letterSpacing: '-0.02em', color: 'var(--text)', marginBottom: '0.25rem' }}>
+                {value}
+              </p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{sub}</p>
             </div>
           ))}
         </div>
 
-        {/* Groups heading */}
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="font-bold text-white text-lg tracking-tight">Your Groups</h2>
+        {/* Groups section */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <h2 style={{ fontSize: '1.0625rem', fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.01em' }}>
+            Your Groups
+          </h2>
           {groups.length > 0 && (
-            <button onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 text-sm font-medium text-accent hover:opacity-80 transition">
-              <Plus size={14}/> New Group
+            <button onClick={() => setShowCreate(true)} style={{
+              display: 'flex', alignItems: 'center', gap: '0.375rem',
+              fontSize: '0.875rem', fontWeight: 500, color: 'var(--accent)',
+              background: 'none', border: 'none', cursor: 'pointer',
+              transition: 'opacity 0.2s ease',
+            }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
+              <Plus size={14} /> New Group
             </button>
           )}
         </div>
 
         {/* Groups grid */}
         {groups.length === 0 ? (
-          <div className="rounded-3xl p-16 text-center"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '2px dashed rgba(255,255,255,0.08)' }}>
-            <div className="w-16 h-16 mx-auto rounded-3xl bg-accent-grad flex items-center justify-center mb-5 shadow-accent-glow">
-              <Users size={28} className="text-white"/>
+          <div style={{
+            borderRadius: '1rem', padding: '4rem 2rem', textAlign: 'center',
+            background: 'var(--bg-subtle)', border: '2px dashed var(--border)',
+          }}>
+            <div style={{
+              width: '52px', height: '52px', borderRadius: '0.875rem',
+              background: 'var(--accent-subtle)', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', margin: '0 auto 1rem',
+            }}>
+              <Users size={24} style={{ color: 'var(--accent)' }} />
             </div>
-            <h3 className="font-bold text-white text-xl mb-2">No groups yet</h3>
-            <p className="text-white/40 text-sm mb-7">Create a group to start tracking shared expenses</p>
-            <button onClick={() => setShowCreate(true)}
-              className="bg-accent-grad text-white px-7 py-3 rounded-2xl font-semibold text-sm hover:opacity-90 hover:scale-105 transition-all shadow-accent-glow">
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.5rem' }}>No groups yet</h3>
+            <p style={{ fontSize: '0.9375rem', color: 'var(--text-2)', marginBottom: '1.5rem' }}>
+              Create a group to start tracking shared expenses
+            </p>
+            <button onClick={() => setShowCreate(true)} style={{
+              background: 'var(--accent)', color: 'white', border: 'none',
+              borderRadius: '0.625rem', padding: '0.75rem 1.5rem',
+              fontSize: '0.9375rem', fontWeight: 600, cursor: 'pointer',
+              transition: 'opacity 0.2s ease',
+            }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.88'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
               Create your first group
             </button>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
             {groups.map((g, i) => (
-              <Link key={g.id} to={`/groups/${g.id}`}
-                onMouseMove={(e) => handleTilt(e, g.id)}
-                onMouseLeave={resetTilt}
-                className="block rounded-3xl p-5 transition-all duration-300"
-                style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(255,255,255,0.08)',
-                  transformStyle: 'preserve-3d',
-                  transition: 'transform .4s cubic-bezier(0.16,1,0.3,1), box-shadow .4s ease, background .2s ease',
-                }}>
-                <div className="flex items-start justify-between mb-5">
-                  <div className="w-12 h-12 rounded-2xl text-white flex items-center justify-center text-xl font-bold shadow-lg"
-                    style={{ background: avatarGrads[i % avatarGrads.length] }}>
+              <Link key={g.id} to={`/groups/${g.id}`} style={{
+                display: 'block', textDecoration: 'none',
+                background: 'var(--card)', border: '1px solid var(--border)',
+                borderRadius: '0.875rem', padding: '1.25rem',
+                boxShadow: 'var(--shadow)',
+                transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow)'; }}
+              >
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                  <div style={{
+                    width: '44px', height: '44px', borderRadius: '0.75rem',
+                    background: AVATAR_COLORS[i % AVATAR_COLORS.length],
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: 'white', fontSize: '1.25rem', fontWeight: 700,
+                  }}>
                     {g.name[0].toUpperCase()}
                   </div>
-                  <span className="text-[11px] px-2.5 py-1 rounded-full font-medium"
-                    style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.4)' }}>
+                  <span style={{
+                    fontSize: '0.6875rem', padding: '0.25rem 0.625rem', borderRadius: '9999px',
+                    background: 'var(--bg-muted)', color: 'var(--text-3)', fontWeight: 500,
+                  }}>
                     {g._count?.expenses || 0} expenses
                   </span>
                 </div>
-                <h3 className="font-bold text-white mb-1 text-base tracking-tight">{g.name}</h3>
-                <p className="text-white/35 text-sm mb-5 truncate">{g.description || 'No description'}</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex -space-x-2">
+
+                <h3 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem', letterSpacing: '-0.01em' }}>
+                  {g.name}
+                </h3>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginBottom: '1rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {g.description || 'No description'}
+                </p>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex' }}>
                     {g.memberships?.slice(0, 4).map((m, j) => (
-                      <div key={m.id} className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                        style={{ background: avatarGrads[(i + j + 1) % avatarGrads.length], border: '2px solid #0d0d12' }}>
+                      <div key={m.id} style={{
+                        width: '26px', height: '26px', borderRadius: '50%',
+                        background: AVATAR_COLORS[(i + j + 1) % AVATAR_COLORS.length],
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: 'white', fontSize: '0.6875rem', fontWeight: 700,
+                        border: '2px solid var(--card)',
+                        marginLeft: j > 0 ? '-6px' : 0,
+                      }}>
                         {(m.displayName || m.user?.username || '?')[0].toUpperCase()}
                       </div>
                     ))}
                     {g.memberships?.length > 4 && (
-                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium"
-                        style={{ background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.5)', border: '2px solid #0d0d12' }}>
+                      <div style={{
+                        width: '26px', height: '26px', borderRadius: '50%',
+                        background: 'var(--bg-muted)', color: 'var(--text-3)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '0.6875rem', fontWeight: 600,
+                        border: '2px solid var(--card)', marginLeft: '-6px',
+                      }}>
                         +{g.memberships.length - 4}
                       </div>
                     )}
                   </div>
-                  <ArrowRight size={16} className="text-accent opacity-60" />
+                  <ArrowRight size={15} style={{ color: 'var(--accent)', opacity: 0.6 }} />
                 </div>
               </Link>
             ))}
@@ -273,51 +337,94 @@ export default function Dashboard() {
         )}
       </main>
 
-      {/* ── CREATE MODAL ── */}
+      {/* ── CREATE GROUP MODAL ── */}
       {showCreate && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)' }}>
-          <div className="w-full max-w-md rounded-3xl p-6 shadow-2xl"
-            style={{ background: '#141418', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <div className="flex items-center justify-between mb-5">
+        <div style={{
+          position: 'fixed', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 50, padding: '1rem',
+          background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
+        }} onClick={() => setShowCreate(false)}>
+          <div style={{
+            width: '100%', maxWidth: '440px',
+            background: 'var(--card)', border: '1px solid var(--border)',
+            borderRadius: '1rem', padding: '1.5rem',
+            boxShadow: 'var(--shadow-xl)',
+            animation: 'rise 0.2s cubic-bezier(0.16,1,0.3,1)',
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
               <div>
-                <h2 className="text-lg font-bold text-white">Create a New Group</h2>
-                <p className="text-white/40 text-sm mt-0.5">Start tracking expenses together</p>
+                <h2 style={{ fontSize: '1.0625rem', fontWeight: 600, color: 'var(--text)' }}>Create a New Group</h2>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-3)', marginTop: '0.25rem' }}>Start tracking expenses together</p>
               </div>
-              <button onClick={() => setShowCreate(false)}
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition">
-                <X size={16}/>
+              <button onClick={() => setShowCreate(false)} style={{
+                width: '30px', height: '30px', borderRadius: '0.5rem',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'none', border: 'none', color: 'var(--text-3)', cursor: 'pointer',
+                transition: 'background 0.15s ease, color 0.15s ease',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-muted)'; e.currentTarget.style.color = 'var(--text)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--text-3)'; }}
+              >
+                <X size={15} />
               </button>
             </div>
-            <form onSubmit={createGroup} className="space-y-4">
+
+            <form onSubmit={createGroup} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-1.5">Group name *</label>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-2)', marginBottom: '0.375rem' }}>
+                  Group name *
+                </label>
                 <input required
-                  className="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none transition"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  style={{
+                    width: '100%', background: 'var(--bg-subtle)', border: '1px solid var(--border)',
+                    borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.9375rem',
+                    color: 'var(--text)', outline: 'none', transition: 'border-color 0.2s ease',
+                    boxSizing: 'border-box',
+                  }}
                   placeholder="e.g. Flat 4B, Goa Trip 2024..."
                   value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
-                  onFocus={e => e.target.style.borderColor='rgb(var(--accent)/0.6)'}
-                  onBlur={e => e.target.style.borderColor='rgba(255,255,255,0.1)'} />
+                  onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-1.5">Description</label>
+                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-2)', marginBottom: '0.375rem' }}>
+                  Description
+                </label>
                 <input
-                  className="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-white/25 focus:outline-none transition"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                  style={{
+                    width: '100%', background: 'var(--bg-subtle)', border: '1px solid var(--border)',
+                    borderRadius: '0.5rem', padding: '0.625rem 0.75rem', fontSize: '0.9375rem',
+                    color: 'var(--text)', outline: 'none', transition: 'border-color 0.2s ease',
+                    boxSizing: 'border-box',
+                  }}
                   placeholder="Optional description"
                   value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-                  onFocus={e => e.target.style.borderColor='rgb(var(--accent)/0.6)'}
-                  onBlur={e => e.target.style.borderColor='rgba(255,255,255,0.1)'} />
+                  onFocus={e => e.target.style.borderColor = 'var(--accent)'}
+                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                />
               </div>
-              <div className="flex gap-3 pt-1">
-                <button type="button" onClick={() => setShowCreate(false)}
-                  className="flex-1 py-3 rounded-xl text-sm font-medium text-white/50 hover:text-white hover:bg-white/8 transition"
-                  style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '0.25rem' }}>
+                <button type="button" onClick={() => setShowCreate(false)} style={{
+                  flex: 1, padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.9375rem',
+                  fontWeight: 500, color: 'var(--text-2)', background: 'var(--bg-subtle)',
+                  border: '1px solid var(--border)', cursor: 'pointer',
+                  transition: 'color 0.2s ease',
+                }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'var(--text-2)'}
+                >
                   Cancel
                 </button>
-                <button type="submit" disabled={loading}
-                  className="flex-1 bg-accent-grad text-white py-3 rounded-xl text-sm font-semibold disabled:opacity-50 hover:opacity-90 transition shadow-accent-glow">
+                <button type="submit" disabled={loading} style={{
+                  flex: 1, padding: '0.75rem', borderRadius: '0.5rem', fontSize: '0.9375rem',
+                  fontWeight: 600, color: 'white', background: 'var(--accent)',
+                  border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s ease',
+                }}
+                  onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.88'; }}
+                  onMouseLeave={e => { if (!loading) e.currentTarget.style.opacity = '1'; }}
+                >
                   {loading ? 'Creating...' : 'Create Group'}
                 </button>
               </div>
